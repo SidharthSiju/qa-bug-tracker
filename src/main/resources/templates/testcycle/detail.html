@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Test Cycle</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="mb-3">
+        <a class="btn btn-sm btn-light" th:href="@{/test-cycles}"><i class="bi bi-arrow-left"></i> Back</a>
+        <div class="d-flex justify-content-between align-items-start mt-2">
+            <div>
+                <h2 class="mb-0" th:text="${cycle.displayLabel()}">Cycle</h2>
+                <div class="text-muted">
+                    <a th:href="@{/change-requests/{id}(id=${cycle.cr.id})}" th:text="${cycle.cr.crNumber}"></a>
+                    <span th:text="' - ' + ${cycle.cr.crName}"></span>
+                </div>
+            </div>
+            <span class="badge badge-soft" th:text="${cycle.status}"></span>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2 mb-3" th:if="${canEditTestCycles}">
+        <form th:if="${cycle.status.name() == 'NOT_STARTED'}" th:action="@{/test-cycles/{id}/start(id=${cycle.id})}"
+              method="post" data-confirm="Start this test cycle?">
+            <button class="btn btn-primary btn-sm" type="submit">Start Cycle</button>
+        </form>
+        <form th:if="${cycle.status.name() == 'IN_PROGRESS'}" th:action="@{/test-cycles/{id}/complete(id=${cycle.id})}"
+              method="post" data-confirm="Complete this test cycle?">
+            <button class="btn btn-success btn-sm" type="submit">Complete Cycle</button>
+        </form>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h3 class="h6 mb-0">Test Cases</h3>
+        <a class="btn btn-sm btn-primary" th:if="${canEditTestCases}"
+           th:href="@{/test-cases/new(crId=${cycle.cr.id}, cycleId=${cycle.id})}">
+            <i class="bi bi-plus-lg me-1"></i>New Test Case
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                <tr><th>Number</th><th>Title</th><th>Status</th><th>Executed At</th><th></th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="testCase : ${testCases}">
+                    <td th:text="${testCase.testCaseNumber}"></td>
+                    <td th:text="${testCase.title}"></td>
+                    <td th:text="${testCase.status}"></td>
+                    <td th:text="${testCase.executedAt != null ? #temporals.format(testCase.executedAt, 'yyyy-MM-dd HH:mm') : ''}"></td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-secondary" th:href="@{/test-cases/{id}(id=${testCase.id})}">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(testCases)}">
+                    <td colspan="5" class="empty-state">No test cases in this cycle</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+</body>
+</html>

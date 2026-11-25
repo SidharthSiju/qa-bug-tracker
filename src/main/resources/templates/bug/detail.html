@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="${bug.bugNumber}">Bug Detail</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="mb-3">
+        <a class="btn btn-sm btn-light" th:href="@{/bugs}"><i class="bi bi-arrow-left"></i> Back</a>
+        <div class="d-flex justify-content-between align-items-start mt-2 flex-wrap gap-2">
+            <div>
+                <h2 class="mb-0"><span th:text="${bug.bugNumber}"></span> — <span th:text="${bug.title}"></span></h2>
+                <div class="mt-1">
+                    <span class="badge badge-soft"
+                          th:classappend="'severity-' + ${#strings.toLowerCase(bug.severity.name())}"
+                          th:text="${bug.severity}"></span>
+                    <span class="badge badge-soft ms-1" th:text="${bug.priority}"></span>
+                    <span class="badge badge-soft ms-1"
+                          th:classappend="'status-' + ${#strings.toLowerCase(#strings.replace(bug.status.name(),'_','-'))}"
+                          th:text="${bug.status}"></span>
+                </div>
+            </div>
+            <a class="btn btn-primary" th:if="${canEditBugs}" th:href="@{/bugs/{id}/edit(id=${bug.id})}">
+                <i class="bi bi-pencil me-1"></i>Edit
+            </a>
+        </div>
+    </div>
+
+    <div class="card mb-3" th:if="${canEditBugs}">
+        <div class="card-header bg-white">
+            <h3 class="h6 mb-0">Workflow Actions</h3>
+        </div>
+        <div class="card-body d-flex flex-wrap gap-2">
+            <form th:if="${bug.status.name() == 'OPEN'}"
+                  sec:authorize="hasAnyRole('QA_TESTER','QA_LEAD','ADMIN')"
+                  th:action="@{/bugs/{id}/assign(id=${bug.id})}" th:object="${assignForm}" method="post"
+                  class="d-flex gap-2 align-items-center">
+                <select class="form-select form-select-sm" th:field="*{assignedToId}">
+                    <option value="">Select developer</option>
+                    <option th:each="user : ${developers}" th:value="${user.id}"
+                            th:text="${user.displayLabel()}"></option>
+                </select>
+                <button class="btn btn-primary btn-sm" type="submit">Assign</button>
+            </form>
+
+            <form th:if="${bug.status.name() == 'ASSIGNED'}"
+                  sec:authorize="hasAnyRole('DEVELOPER','ADMIN')"
+                  th:action="@{/bugs/{id}/start-analysis(id=${bug.id})}" method="post"
+                  data-confirm="Start analysis for this bug?">
+                <button class="btn btn-outline-primary btn-sm" type="submit">Start Analysis</button>
+            </form>
+
+            <form th:if="${bug.status.name() == 'IN_ANALYSIS' or bug.status.name() == 'REOPENED'}"
+                  sec:authorize="hasAnyRole('DEVELOPER','ADMIN')"
+                  th:action="@{/bugs/{id}/start-development(id=${bug.id})}" method="post"
+                  data-confirm="Start development for this bug?">
+                <button class="btn btn-outline-primary btn-sm" type="submit">Start Development</button>
+            </form>
+
+            <form th:if="${bug.status.name() == 'ASSIGNED' or bug.status.name() == 'IN_ANALYSIS' or bug.status.name() == 'IN_DEVELOPMENT'}"
+                  sec:authorize="hasAnyRole('DEVELOPER','ADMIN')"
+                  th:action="@{/bugs/{id}/mark-fixed(id=${bug.id})}" method="post"
+                  data-confirm="Mark this bug as fixed?">
+                <button class="btn btn-outline-success btn-sm" type="submit">Mark Fixed</button>
+            </form>
+
+            <form th:if="${bug.status.name() == 'FIXED'}"
+                  sec:authorize="hasAnyRole('QA_LEAD','SA_LEAD','ADMIN')"
+                  th:action="@{/bugs/{id}/ready-for-retest(id=${bug.id})}" method="post"
+                  data-confirm="Submit this bug for retest?">
+                <button class="btn btn-outline-success btn-sm" type="submit">Ready for Retest</button>
+            </form>
+
+            <form th:if="${bug.status.name() == 'READY_FOR_RETEST'}"
+                  sec:authorize="hasAnyRole('QA_TESTER','QA_LEAD','ADMIN')"
+                  th:action="@{/bugs/{id}/start-retest(id=${bug.id})}" method="post"
+                  data-confirm="Start retesting this bug?">
+                <button class="btn btn-outline-primary btn-sm" type="submit">Start Retest</button>
+            </form>
+
+            <form th:if="${bug.status.name() == 'RETESTING'}"
+                  sec:authorize="hasAnyRole('QA_TESTER','QA_LEAD','ADMIN')"
+                  th:action="@{/bugs/{id}/retest(id=${bug.id})}" th:object="${retestForm}" method="post"
+                  class="d-flex gap-2 align-items-center">
+                <select class="form-select form-select-sm" th:field="*{result}">
+                    <option value="PASS">PASS</option>
+                    <option value="FAIL">FAIL</option>
+                    <option value="BLOCKED">BLOCKED</option>
+                </select>
+                <input type="text" class="form-control form-control-sm" th:field="*{comment}"
+                       placeholder="Retest comment">
+                <button class="btn btn-primary btn-sm" type="submit">Record Retest</button>
+            </form>
+
+            <form th:if="${bug.status.name() == 'OPEN' or bug.status.name() == 'ASSIGNED' or bug.status.name() == 'IN_ANALYSIS'}"
+                  sec:authorize="hasAnyRole('QA_LEAD','ADMIN')"
+                  th:action="@{/bugs/{id}/reject(id=${bug.id})}" method="post"
+                  class="d-flex gap-2 align-items-center"
+                  data-confirm="Reject this bug?">
+                <select class="form-select form-select-sm" name="resolution">
+                    <option th:each="resolution : ${T(com.duc.crqa.common.enums.Resolution).values()}"
+                            th:value="${resolution}" th:text="${resolution}"></option>
+                </select>
+                <input type="text" class="form-control form-control-sm" name="comment" placeholder="Rejection comment">
+                <button class="btn btn-outline-danger btn-sm" type="submit">Reject</button>
+            </form>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-3" role="tablist">
+        <li class="nav-item"><a class="nav-link" th:classappend="${tab == 'details'} ? 'active'"
+                                data-bs-toggle="tab" href="#details">Details</a></li>
+        <li class="nav-item"><a class="nav-link" th:classappend="${tab == 'comments'} ? 'active'"
+                                data-bs-toggle="tab" href="#comments">Comments</a></li>
+        <li class="nav-item"><a class="nav-link" th:classappend="${tab == 'attachments'} ? 'active'"
+                                data-bs-toggle="tab" href="#attachments">Attachments</a></li>
+        <li class="nav-item"><a class="nav-link" th:classappend="${tab == 'history'} ? 'active'"
+                                data-bs-toggle="tab" href="#history">History</a></li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane fade" th:classappend="${tab == 'details'} ? 'show active'" id="details">
+            <div class="card p-3 mb-3">
+                <div class="row g-3">
+                    <div class="col-6 col-md-3">
+                        <div class="detail-label">Change Request</div>
+                        <div class="detail-value">
+                            <a th:href="@{/change-requests/{id}(id=${bug.cr.id})}" th:text="${bug.cr.crNumber}"></a>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3" th:if="${bug.testCase != null}">
+                        <div class="detail-label">Test Case</div>
+                        <div class="detail-value">
+                            <a th:href="@{/test-cases/{id}(id=${bug.testCase.id})}"
+                               th:text="${bug.testCase.testCaseNumber}"></a>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="detail-label">Environment</div>
+                        <div class="detail-value" th:text="${bug.environment}"></div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="detail-label">Application</div>
+                        <div class="detail-value" th:text="${bug.application}"></div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="detail-label">Module</div>
+                        <div class="detail-value" th:text="${bug.module}"></div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="detail-label">Sprint</div>
+                        <div class="detail-value" th:text="${bug.sprint}"></div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="detail-label">Defect Category</div>
+                        <div class="detail-value" th:text="${bug.defectCategory?.label}"></div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="detail-label">Test Phase Found</div>
+                        <div class="detail-value" th:text="${bug.testPhaseFound}"></div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="detail-label">External Defect ID</div>
+                        <div class="detail-value" th:text="${bug.externalDefectId}"></div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="detail-label">Reported By</div>
+                        <div class="detail-value" th:text="${bug.reportedBy?.displayLabel()}"></div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="detail-label">Assigned To</div>
+                        <div class="detail-value" th:text="${bug.assignedTo?.displayLabel()}"></div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="detail-label">Reported At</div>
+                        <div class="detail-value" th:text="${#temporals.format(bug.reportedAt, 'yyyy-MM-dd HH:mm')}"></div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="detail-label">Resolution</div>
+                        <div class="detail-value" th:text="${bug.resolution}"></div>
+                    </div>
+                    <div class="col-12">
+                        <div class="detail-label">Description</div>
+                        <p th:text="${bug.description}"></p>
+                    </div>
+                    <div class="col-12">
+                        <div class="detail-label">Steps to Reproduce</div>
+                        <p class="mb-0" th:text="${bug.stepsToReproduce}"></p>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Expected Result</div>
+                        <p th:text="${bug.expectedResult}"></p>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Actual Result</div>
+                        <p th:text="${bug.actualResult}"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" th:classappend="${tab == 'comments'} ? 'show active'" id="comments">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="timeline-item" th:each="comment : ${comments}">
+                        <div class="d-flex justify-content-between">
+                            <span class="fw-semibold" th:text="${userMap[comment.createdBy]?.displayLabel()}"></span>
+                            <span class="text-muted small"
+                                  th:text="${#temporals.format(comment.createdAt, 'yyyy-MM-dd HH:mm')}"></span>
+                        </div>
+                        <div class="small text-muted" th:text="${comment.commentType}"></div>
+                        <p class="mb-0" th:text="${comment.comment}"></p>
+                    </div>
+                    <div th:if="${#lists.isEmpty(comments)}" class="empty-state">No comments yet</div>
+                </div>
+            </div>
+            <div class="card" th:if="${canEditBugs}">
+                <div class="card-body">
+                    <h3 class="h6">Add Comment</h3>
+                    <form th:action="@{/bugs/{id}/comment(id=${bug.id})}" th:object="${commentForm}" method="post"
+                          data-disable-on-submit>
+                        <div class="mb-2">
+                            <select class="form-select form-select-sm" th:field="*{commentType}">
+                                <option th:each="type : ${T(com.duc.crqa.common.enums.CommentType).values()}"
+                                        th:value="${type}" th:text="${type}"></option>
+                            </select>
+                        </div>
+                        <textarea class="form-control" rows="3" th:field="*{comment}" placeholder="Write a comment"></textarea>
+                        <button class="btn btn-primary btn-sm mt-2" type="submit">Add Comment</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" th:classappend="${tab == 'attachments'} ? 'show active'" id="attachments">
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                            <tr><th>File</th><th>Type</th><th>Size</th><th>Uploaded By</th><th></th></tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="attachment : ${attachments}">
+                                <td th:text="${attachment.fileName}"></td>
+                                <td th:text="${attachment.contentType}"></td>
+                                <td th:text="${attachment.fileSize}"></td>
+                                <td th:text="${userMap[attachment.uploadedBy]?.displayLabel()}"></td>
+                                <td class="text-end">
+                                    <a class="btn btn-sm btn-outline-secondary"
+                                       th:href="@{/attachments/{id}/download(id=${attachment.id})}">
+                                        <i class="bi bi-download"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(attachments)}">
+                                <td colspan="5" class="empty-state">No attachments</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" th:classappend="${tab == 'history'} ? 'show active'" id="history">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <form th:action="@{/bugs/{id}(id=${bug.id})}" method="get" class="row g-2">
+                        <input type="hidden" name="tab" value="history">
+                        <input type="hidden" name="historySort" th:value="${historySort}">
+                        <input type="hidden" name="historyDir" th:value="${historyDir}">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control form-control-sm" name="historySearch"
+                                   th:value="${historySearch}" placeholder="Action or comment">
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-primary btn-sm w-100" type="submit"><i class="bi bi-search"></i></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                        <tr>
+                            <th data-sort="performedAt" data-sort-param="historySort" data-dir-param="historyDir"
+                                data-page-param="historyPage">Time</th>
+                            <th data-sort="action" data-sort-param="historySort" data-dir-param="historyDir"
+                                data-page-param="historyPage">Action</th>
+                            <th data-sort="oldStatus" data-sort-param="historySort" data-dir-param="historyDir"
+                                data-page-param="historyPage">From</th>
+                            <th data-sort="newStatus" data-sort-param="historySort" data-dir-param="historyDir"
+                                data-page-param="historyPage">To</th>
+                            <th>Comment</th>
+                            <th>By</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="entry : ${historyPage.content}">
+                            <td th:text="${entry.performedAt != null ? #temporals.format(entry.performedAt, 'yyyy-MM-dd HH:mm') : ''}"></td>
+                            <td th:text="${entry.action}"></td>
+                            <td th:text="${entry.oldStatus}"></td>
+                            <td th:text="${entry.newStatus}"></td>
+                            <td th:text="${entry.comment}"></td>
+                            <td th:text="${userMap[entry.performedBy]?.displayLabel()}"></td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(historyPage.content)}">
+                            <td colspan="6" class="empty-state">No history</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer bg-white d-flex justify-content-end">
+                    <nav th:if="${historyPage.totalPages > 1}" aria-label="Pagination">
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item" th:classappend="${historyPage.first} ? 'disabled'">
+                                <a class="page-link"
+                                   th:href="@{/bugs/{id}(id=${bug.id}, tab='history', historySearch=${historySearch}, historySort=${historySort}, historyDir=${historyDir}, historyPage=${historyPage.number - 1})}">Previous</a>
+                            </li>
+                            <li class="page-item disabled">
+                                <span class="page-link" th:text="'Page ' + ${historyPage.number + 1} + ' of ' + ${historyPage.totalPages}"></span>
+                            </li>
+                            <li class="page-item" th:classappend="${historyPage.last} ? 'disabled'">
+                                <a class="page-link"
+                                   th:href="@{/bugs/{id}(id=${bug.id}, tab='history', historySearch=${historySearch}, historySort=${historySort}, historyDir=${historyDir}, historyPage=${historyPage.number + 1})}">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+</html>

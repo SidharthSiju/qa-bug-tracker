@@ -1,0 +1,103 @@
+# --- Build output ---
+target/
+bin/
+*.class
+*.jar
+*.war
+*.log
+logs/
+
+# --- IDE / OS files ---
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+# Eclipse
+.classpath
+.project
+.settings/
+.apt_generated/
+.factorypath
+.springBeans
+.sts4-cache/
+
+# --- Secrets and local config (never commit) ---
+.env
+.env.*
+*.pem
+*.jks
+*.p12
+*.key
+application-local.yml
+application-local.properties
+application-*-secret.yml
+
+# --- Runtime data ---
+data/
+uploads/
+*.mv.db
+*.trace.db
+
+# --- Generated exports and bundles ---
+export/
+*.zip
+
+# --- Database dumps (can contain the JIRA token, user data and hashes) ---
+*.dump
+*.bak
+backup/
+
+# --- Tool state ---
+.commandcode/# --- Build output ---
+target/
+bin/
+*.class
+*.jar
+*.war
+*.log
+logs/
+
+# --- IDE / OS files ---
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+# Eclipse
+.classpath
+.project
+.settings/
+.apt_generated/
+.factorypath
+.springBeans
+.sts4-cache/
+
+# --- Secrets and local config (never commit) ---
+.env
+.env.*
+*.pem
+*.jks
+*.p12
+*.key
+application-local.yml
+application-local.properties
+application-*-secret.yml
+
+# --- Runtime data ---
+data/
+uploads/
+*.mv.db
+*.trace.db
+
+# --- Generated exports and bundles ---
+export/
+*.zip
+
+# --- Database dumps (can contain the JIRA token, user data and hashes) ---
+*.dump
+*.bak
+backup/
+
+# --- Tool state ---
+.commandcode/

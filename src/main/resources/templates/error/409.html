@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:attr="data-bs-theme=${appTheme == 'dark' ? 'dark' : 'light'}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Conflict | CR Issue Tracker</title>
+    <link rel="stylesheet" th:href="@{/vendor/bootstrap/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body class="app-body d-flex align-items-center justify-content-center" style="min-height:100vh;"
+      th:classappend="'theme-' + ${appTheme} + ' font-' + ${appFont} + ' fontsize-' + ${appFontSize}">
+<div class="text-center">
+    <h1 class="display-4" th:text="${status != null ? status : 409}">409</h1>
+    <p class="lead" th:text="${message != null ? message : 'This record was modified by another user.'}">Conflict</p>
+    <a class="btn btn-primary" th:href="@{/dashboard}">Back to dashboard</a>
+</div>
+</body>
+</html>

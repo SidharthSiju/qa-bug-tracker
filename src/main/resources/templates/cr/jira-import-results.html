@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Import from JIRA</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="mb-3">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+            <div>
+                <h2 class="mb-0">JIRA change requests</h2>
+                <p class="text-muted mb-0">
+                    <span th:text="${totalIssues}"></span> issue(s) found. Select the ones to import &mdash; existing
+                    change requests are refreshed, new ones are created.
+                </p>
+            </div>
+            <div class="d-flex gap-2">
+                <a class="btn btn-outline-secondary" th:href="@{/change-requests/jira-import}">
+                    <i class="bi bi-search me-1"></i>New search
+                </a>
+                <form th:action="@{/change-requests/jira-import/clear}" method="post" class="mb-0">
+                    <button class="btn btn-light" type="submit">Clear results</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-info" th:if="${importResult != null}">
+        <strong>JIRA import finished:</strong>
+        <span th:text="${importResult.created()} + ' created, ' + ${importResult.updated()} + ' updated, '
+                       + ${importResult.failed()} + ' failed'"></span>
+        <ul class="mb-0 mt-2" th:if="${!importResult.errors().isEmpty()}">
+            <li th:each="rowError : ${importResult.errors()}" th:text="${rowError}"></li>
+        </ul>
+    </div>
+
+    <form th:action="@{/change-requests/jira-import/import}" method="post" data-disable-on-submit>
+        <input type="hidden" name="page" th:value="${page.number}">
+        <input type="hidden" name="size" th:value="${page.size}">
+        <!-- Selections made on the other pages travel with the form. -->
+        <input type="hidden" name="key" th:each="hidden : ${hiddenKeys}" th:value="${hidden}">
+
+        <div class="card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <span class="text-muted small">
+                    <span th:text="${existingCount}"></span> of these already exist in the tracker
+                </span>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-secondary" type="submit" formnovalidate
+                            th:formaction="@{/change-requests/jira-import/export}"
+                            title="Download the selected rows as a Change Request bulk-import CSV">
+                        <i class="bi bi-filetype-csv me-1"></i>Export Selected
+                    </button>
+                    <button class="btn btn-sm btn-primary" type="submit">
+                        <i class="bi bi-download me-1"></i>Import selected
+                    </button>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle mb-0 text-nowrap">
+                    <thead>
+                    <tr>
+                        <th style="width:2rem;">
+                            <input type="checkbox" data-jira-check-all title="Select all on this page">
+                        </th>
+                        <th>Epic Number</th>
+                        <th>Epic Summary</th>
+                        <th>Epic Type</th>
+                        <th>Epic Status</th>
+                        <th>Story Number</th>
+                        <th>Story Summary</th>
+                        <th>Story Type</th>
+                        <th>Story Status</th>
+                        <th>Priority</th>
+                        <th>Created</th>
+                        <th>CM PM</th>
+                        <th>CM SA</th>
+                        <th>ADM PM</th>
+                        <th>ADM SA</th>
+                        <th>Kick-off Date</th>
+                        <th>DAC Submit Date</th>
+                        <th>HLD Submit Date</th>
+                        <th>RFBT Date</th>
+                        <th>Developer</th>
+                        <th>QA</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="row : ${page.content}"
+                        th:classappend="${row.attention()} ? 'row-attention' : ''">
+                        <td>
+                            <input type="checkbox" class="jira-key" name="key" th:value="${row.storyNumber()}"
+                                   th:checked="${#lists.contains(selectedKeys, row.storyNumber())}">
+                        </td>
+                        <td class="fw-semibold">
+                            <i class="bi bi-star-fill text-danger me-1" th:unless="${row.existing()}"
+                               title="Not in the tracker yet - this change request will be created"></i>
+                            <span th:text="${row.crNumber()}"></span>
+                            <div>
+                                <span class="badge text-bg-secondary" th:if="${row.existing()}"
+                                      title="Already exists - this change request will be updated">Update</span>
+                            </div>
+                        </td>
+                        <td th:text="${row.epicSummary()}"></td>
+                        <td th:text="${row.epicType()}"></td>
+                        <td th:text="${row.epicStatus()}"></td>
+                        <td class="fw-semibold" th:text="${row.storyNumber()}"></td>
+                        <td th:text="${row.storySummary()}"></td>
+                        <td th:text="${row.storyType()}"></td>
+                        <td th:text="${row.storyStatus()}"></td>
+                        <td th:text="${row.priority()}"></td>
+                        <td th:text="${row.created()}"></td>
+                        <td th:text="${row.cmPm()}"></td>
+                        <td th:text="${row.cmSa()}"></td>
+                        <td th:text="${row.admPm()}"></td>
+                        <td th:text="${row.admSa()}"></td>
+                        <td th:text="${row.kickoffDate()}"></td>
+                        <td th:text="${row.dacSubmitDate()}"></td>
+                        <td th:text="${row.hldSubmitDate()}"></td>
+                        <td th:text="${row.rfbtDate()}"></td>
+                        <td th:text="${row.developer()}"></td>
+                        <td th:text="${row.qa()}"></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(page.content)}">
+                        <td colspan="21" class="empty-state">No JIRA issues to review</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <span class="text-muted small">
+                    <span th:text="${page.totalElements}"></span> row(s)
+                    &nbsp;&middot;&nbsp;
+                    <i class="bi bi-star-fill text-danger"></i> = not in the tracker yet (will be created)
+                    &nbsp;&middot;&nbsp;
+                    <span class="text-danger">red rows</span> = RFBT date is before today
+                    &nbsp;&middot;&nbsp;
+                    Developer = JIRA assignee, QA = the QA Lead already recorded here
+                </span>
+                <nav th:if="${page.totalPages > 1}" aria-label="Pagination">
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+                            <a class="page-link"
+                               th:href="@{/change-requests/jira-import/results(page=${page.number - 1}, size=${page.size})}"
+                               th:data-page-href="@{/change-requests/jira-import/results(page=${page.number - 1}, size=${page.size})}">Previous</a>
+                        </li>
+                        <li class="page-item disabled">
+                            <span class="page-link"
+                                  th:text="'Page ' + ${page.number + 1} + ' of ' + ${page.totalPages}"></span>
+                        </li>
+                        <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+                            <a class="page-link"
+                               th:href="@{/change-requests/jira-import/results(page=${page.number + 1}, size=${page.size})}"
+                               th:data-page-href="@{/change-requests/jira-import/results(page=${page.number + 1}, size=${page.size})}">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </form>
+
+    <script>
+        (function () {
+            // Every key that is currently selected: the ticked rows of this page plus the rows picked on other pages.
+            function selectedKeys() {
+                var keys = [];
+                document.querySelectorAll('input.jira-key:checked').forEach(function (box) {
+                    keys.push(box.value);
+                });
+                document.querySelectorAll('input[type="hidden"][name="key"]').forEach(function (hidden) {
+                    keys.push(hidden.value);
+                });
+                return keys;
+            }
+
+            document.querySelectorAll('a[data-page-href]').forEach(function (link) {
+                link.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    var url = link.getAttribute('data-page-href');
+                    selectedKeys().forEach(function (key) {
+                        url += '&key=' + encodeURIComponent(key);
+                    });
+                    window.location = url;
+                });
+            });
+
+            var master = document.querySelector('[data-jira-check-all]');
+            if (master) {
+                master.addEventListener('change', function () {
+                    document.querySelectorAll('input.jira-key').forEach(function (box) {
+                        box.checked = master.checked;
+                    });
+                });
+            }
+        })();
+    </script>
+</section>
+</body>
+</html>

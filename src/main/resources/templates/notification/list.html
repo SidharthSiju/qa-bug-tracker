@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Notifications</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <h2 class="mb-3">Notifications</h2>
+
+    <div class="card">
+        <div class="list-group list-group-flush">
+            <div class="list-group-item" th:each="notification : ${notifications}">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="fw-semibold" th:text="${notification.subject}"></div>
+                        <div class="text-muted small" th:text="${notification.message}"></div>
+                        <div class="small text-muted"
+                             th:text="${#temporals.format(notification.createdAt, 'yyyy-MM-dd HH:mm')}"></div>
+                    </div>
+                    <form th:if="${!notification.readFlag}" th:action="@{/notifications/{id}/read(id=${notification.id})}"
+                          method="post">
+                        <button class="btn btn-sm btn-outline-primary" type="submit">Mark read</button>
+                    </form>
+                </div>
+            </div>
+            <div th:if="${#lists.isEmpty(notifications)}" class="empty-state">No notifications</div>
+        </div>
+    </div>
+</section>
+</body>
+</html>

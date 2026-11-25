@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Bulk Import Users</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="mb-3">
+        <a class="btn btn-sm btn-light" th:href="@{/admin/users}"><i class="bi bi-arrow-left"></i> Back</a>
+        <h2 class="mt-2 mb-0">Bulk Import Users</h2>
+        <p class="text-muted mb-0">Upload a CSV file to create multiple users at once.</p>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <form th:action="@{/admin/users/upload}" method="post" enctype="multipart/form-data"
+                  data-disable-on-submit>
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-6">
+                        <label class="form-label required" for="file">CSV file</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".csv,text/csv" required>
+                    </div>
+                    <div class="col-md-6 d-flex gap-2">
+                        <button class="btn btn-primary" type="submit"><i class="bi bi-upload me-1"></i>Upload</button>
+                        <a class="btn btn-outline-secondary" th:href="@{/admin/users/upload/template}">
+                            <i class="bi bi-download me-1"></i>Download template
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card mb-3" th:if="${result != null}">
+        <div class="card-body">
+            <h3 class="h6">Upload result</h3>
+            <p class="mb-2">
+                <span th:text="${result.totalRows}">0</span> row(s) processed:
+                <span class="text-success fw-semibold" th:text="${result.successCount}">0</span> created,
+                <span class="text-danger fw-semibold" th:text="${result.errorCount}">0</span> failed
+            </p>
+            <div th:if="${result.errorCount > 0}" class="table-responsive">
+                <table class="table table-sm table-hover align-middle mb-0">
+                    <thead>
+                    <tr><th>Row</th><th>Error</th></tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="rowError : ${result.errors}">
+                        <td th:text="${rowError.rowNumber}"></td>
+                        <td class="text-danger" th:text="${rowError.message}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+</html>

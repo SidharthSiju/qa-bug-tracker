@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/crqa}
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USERNAME:crqa}
+    password: ${DB_PASSWORD:crqa}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+
+server:
+  servlet:
+    session:
+      cookie:
+        secure: true

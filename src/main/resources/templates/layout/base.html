@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      th:attr="data-bs-theme=${appTheme == 'dark' ? 'dark' : 'light'}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title layout:title-pattern="$CONTENT_TITLE | CR Issue Tracker">CR Issue Tracker</title>
+    <link rel="stylesheet" th:href="@{/vendor/bootstrap/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendor/bootstrap-icons/bootstrap-icons.min.css}">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body class="app-body" th:classappend="'theme-' + ${appTheme} + ' font-' + ${appFont} + ' fontsize-' + ${appFontSize}">
+<header th:replace="~{fragments/header :: header}"></header>
+
+<div th:if="${isImpersonating}"
+     style="background:#fef3c7;color:#92400e;padding:.5rem 1rem;text-align:center;font-size:.9rem;border-bottom:1px solid #fde68a;">
+    <i class="bi bi-person-badge me-1"></i>
+    You are impersonating <strong th:text="${currentUser?.displayLabel()}">user</strong>.
+    <form th:action="@{/impersonate/exit}" method="post" class="d-inline mb-0">
+        <button type="submit" class="btn btn-link p-0 align-baseline fw-semibold">Switch back to <span th:text="${impersonatorLabel}">admin</span></button>
+    </form>
+</div>
+
+<div class="app-layout">
+    <aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+    <main class="app-main">
+        <div th:replace="~{fragments/alerts :: alerts}"></div>
+        <section layout:fragment="content"></section>
+    </main>
+</div>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+
+<script th:inline="javascript">
+    window.CC_ACTIVITY_URL = /*[[@{/api/activity}]]*/ '/api/activity';
+</script>
+<script th:src="@{/vendor/bootstrap/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

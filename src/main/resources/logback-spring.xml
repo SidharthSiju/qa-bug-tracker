@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- Logback problems (an unwritable log directory, an appender that failed to start) must be visible, otherwise
+         the file appender is disabled silently and the application only ever logs to the console. -->
+    <statusListener class="com.duc.crqa.config.LogbackStatusListener"/>
+
+    <!-- The directory the log file is written to. LOG_PATH wins: -DLOG_PATH=... or an exported LOG_PATH, otherwise
+         it is relative to the working directory (start.sh passes an absolute path, and application.yml maps
+         logging.file.path to the same variable, so all three agree). The values stay in the context so the
+         application can report the resolved file at start-up. -->
+    <property scope="context" name="LOG_PATH" value="${LOG_PATH:-../logs}"/>
+    <property scope="context" name="LOG_FILE" value="${LOG_PATH}/cr-qa-management"/>
+    <property name="LOG_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [user:%X{username:-anonymous}] [userId:%X{userId:-}] %logger{36} - %msg%n"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_FILE}.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_FILE}.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Application loggers -->
+    <logger name="com.duc.crqa" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="FILE" />
+    </logger>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </root>
+</configuration>

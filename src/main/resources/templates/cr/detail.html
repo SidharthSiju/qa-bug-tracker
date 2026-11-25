@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="${cr.crNumber}">CR Detail</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="mb-3">
+        <a class="btn btn-sm btn-light" th:href="@{/change-requests}"><i class="bi bi-arrow-left"></i> Back</a>
+        <div class="d-flex justify-content-between align-items-start mt-2 flex-wrap gap-2">
+            <div>
+                <h2 class="mb-0"><span th:text="${cr.crNumber}"></span> — <span th:text="${cr.crName}"></span></h2>
+                <span class="badge badge-soft"
+                      th:classappend="'status-' + ${#strings.toLowerCase(#strings.replace(cr.status.name(),'_','-'))}"
+                      th:text="${cr.status}"></span>
+            </div>
+            <div class="d-flex gap-2">
+                <a class="btn btn-primary" th:if="${canEditChangeRequests}"
+                   th:href="@{/change-requests/{id}/edit(id=${cr.id})}">
+                    <i class="bi bi-pencil me-1"></i>Edit
+                </a>
+                <form th:if="${canDeleteChangeRequests}"
+                      th:action="@{/change-requests/{id}/delete(id=${cr.id})}" method="post"
+                      data-confirm="Delete this change request? Its test cycles, test cases, bugs and activities will be moved to the archive.">
+                    <button class="btn btn-outline-danger" type="submit">
+                        <i class="bi bi-trash me-1"></i>Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-3" role="tablist">
+        <li class="nav-item"><a class="nav-link" th:classappend="${tab == 'overview'} ? 'active'"
+                                data-bs-toggle="tab" href="#overview">Overview</a></li>
+        <li class="nav-item"><a class="nav-link" th:classappend="${tab == 'activities'} ? 'active'"
+                                data-bs-toggle="tab" href="#activities">Activities</a></li>
+        <li class="nav-item"><a class="nav-link" th:classappend="${tab == 'cycles'} ? 'active'"
+                                data-bs-toggle="tab" href="#cycles">Test Cycles</a></li>
+        <li class="nav-item"><a class="nav-link" th:classappend="${tab == 'cases'} ? 'active'"
+                                data-bs-toggle="tab" href="#cases">Test Cases</a></li>
+        <li class="nav-item"><a class="nav-link" th:classappend="${tab == 'bugs'} ? 'active'"
+                                data-bs-toggle="tab" href="#bugs">Bugs</a></li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane fade" th:classappend="${tab == 'overview'} ? 'show active'" id="overview">
+            <div class="card p-3 mb-3">
+                <div class="row g-3">
+                    <div class="col-6 col-md-3">
+                        <div class="detail-label">Project</div>
+                        <div class="detail-value" th:text="${cr.project?.displayLabel()}"></div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="detail-label">Environment</div>
+                        <div class="detail-value" th:text="${cr.environment}"></div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="detail-label">Priority</div>
+                        <div class="detail-value" th:text="${cr.priority}"></div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="detail-label">Complexity</div>
+                        <div class="detail-value" th:text="${cr.complexity}"></div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="detail-label">Sprint Name</div>
+                        <div class="detail-value" th:text="${cr.sprintName}"></div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="detail-label">Story Number</div>
+                        <div class="detail-value" th:text="${cr.storyNumber}"></div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="detail-label">SA Lead</div>
+                        <div class="detail-value" th:text="${cr.saLead?.displayLabel()}"></div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="detail-label">Development Owner</div>
+                        <div class="detail-value" th:text="${cr.developmentOwner?.displayLabel()}"></div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="detail-label">QA Lead</div>
+                        <div class="detail-value" th:text="${cr.qaLead?.displayLabel()}"></div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="detail-label">Planned Start</div>
+                        <div class="detail-value"
+                             th:text="${cr.plannedStartDate != null ? #temporals.format(cr.plannedStartDate, 'yyyy-MM-dd') : ''}"></div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="detail-label">Planned End</div>
+                        <div class="detail-value"
+                             th:text="${cr.plannedEndDate != null ? #temporals.format(cr.plannedEndDate, 'yyyy-MM-dd') : ''}"></div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="detail-label">Actual Start</div>
+                        <div class="detail-value"
+                             th:text="${cr.actualStartDate != null ? #temporals.format(cr.actualStartDate, 'yyyy-MM-dd') : ''}"></div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="detail-label">Actual End</div>
+                        <div class="detail-value"
+                             th:text="${cr.actualEndDate != null ? #temporals.format(cr.actualEndDate, 'yyyy-MM-dd') : ''}"></div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="detail-label">DAC Submit Date</div>
+                        <div class="detail-value"
+                             th:text="${cr.dacSubmitDate != null ? #temporals.format(cr.dacSubmitDate, 'yyyy-MM-dd') : ''}"></div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="detail-label">HLD Submit Date</div>
+                        <div class="detail-value"
+                             th:text="${cr.hldSubmitDate != null ? #temporals.format(cr.hldSubmitDate, 'yyyy-MM-dd') : ''}"></div>
+                    </div>
+                    <div class="col-12">
+                        <div class="detail-label">Description</div>
+                        <p class="mb-0" th:text="${cr.description}"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card p-3" th:if="${canEditChangeRequests}">
+                <h3 class="h6">Change Status</h3>
+                <form th:action="@{/change-requests/{id}/status(id=${cr.id})}" method="post" class="row g-2"
+                      data-disable-on-submit>
+                    <div class="col-auto">
+                        <select class="form-select" name="target">
+                            <option th:each="status : ${statuses}" th:unless="${status == cr.status}"
+                                    th:value="${status}" th:text="${status}"></option>
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-primary" type="submit">Update Status</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" th:classappend="${tab == 'activities'} ? 'show active'" id="activities">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <form th:action="@{/change-requests/{id}(id=${cr.id})}" method="get" class="row g-2">
+                        <input type="hidden" name="tab" value="activities">
+                        <input type="hidden" name="activitySort" th:value="${activitySort}">
+                        <input type="hidden" name="activityDir" th:value="${activityDir}">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control form-control-sm" name="activitySearch"
+                                   th:value="${activitySearch}" placeholder="Type or description">
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-primary btn-sm w-100" type="submit"><i class="bi bi-search"></i></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                        <tr>
+                            <th data-sort="performedAt" data-sort-param="activitySort" data-dir-param="activityDir"
+                                data-page-param="activityPage">Time</th>
+                            <th data-sort="activityType" data-sort-param="activitySort" data-dir-param="activityDir"
+                                data-page-param="activityPage">Type</th>
+                            <th data-sort="description" data-sort-param="activitySort" data-dir-param="activityDir"
+                                data-page-param="activityPage">Description</th>
+                            <th>By</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="activity : ${activityPage.content}">
+                            <td th:text="${activity.performedAt != null ? #temporals.format(activity.performedAt, 'yyyy-MM-dd HH:mm') : ''}"></td>
+                            <td th:text="${activity.activityType}"></td>
+                            <td th:text="${activity.description}"></td>
+                            <td th:text="${activity.performedBy != null ? userMap[activity.performedBy]?.displayLabel() : ''}"></td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(activityPage.content)}">
+                            <td colspan="4" class="empty-state">No activities recorded</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer bg-white d-flex justify-content-end">
+                    <nav th:if="${activityPage.totalPages > 1}" aria-label="Pagination">
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item" th:classappend="${activityPage.first} ? 'disabled'">
+                                <a class="page-link"
+                                   th:href="@{/change-requests/{id}(id=${cr.id}, tab='activities', activitySearch=${activitySearch}, activitySort=${activitySort}, activityDir=${activityDir}, activityPage=${activityPage.number - 1})}">Previous</a>
+                            </li>
+                            <li class="page-item disabled">
+                                <span class="page-link" th:text="'Page ' + ${activityPage.number + 1} + ' of ' + ${activityPage.totalPages}"></span>
+                            </li>
+                            <li class="page-item" th:classappend="${activityPage.last} ? 'disabled'">
+                                <a class="page-link"
+                                   th:href="@{/change-requests/{id}(id=${cr.id}, tab='activities', activitySearch=${activitySearch}, activitySort=${activitySort}, activityDir=${activityDir}, activityPage=${activityPage.number + 1})}">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" th:classappend="${tab == 'cycles'} ? 'show active'" id="cycles">
+            <div class="d-flex justify-content-end mb-2">
+                <a class="btn btn-sm btn-primary" th:if="${canEditTestCycles}"
+                   th:href="@{/test-cycles/new(crId=${cr.id})}">
+                    <i class="bi bi-plus-lg me-1"></i>New Test Cycle
+                </a>
+            </div>
+            <div class="card mb-3">
+                <div class="card-body">
+                    <form th:action="@{/change-requests/{id}(id=${cr.id})}" th:object="${cycleCriteria}" method="get"
+                          class="row g-2">
+                        <input type="hidden" name="tab" value="cycles">
+                        <input type="hidden" name="cycleSort" th:value="${cycleSort}">
+                        <input type="hidden" name="cycleDir" th:value="${cycleDir}">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control form-control-sm" th:field="*{search}"
+                                   placeholder="Cycle name">
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select form-select-sm" th:field="*{status}">
+                                <option value="">All statuses</option>
+                                <option th:each="s : ${T(com.duc.crqa.common.enums.TestCycleStatus).values()}"
+                                        th:value="${s}" th:text="${s}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-primary btn-sm w-100" type="submit"><i class="bi bi-search"></i></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="card">
+                <form th:action="@{/test-cycles/bulk-delete}" method="post"
+                      data-confirm="Delete the selected test cycle(s)?">
+                    <input type="hidden" name="crId" th:value="${cr.id}">
+                    <div class="card-header bg-white d-flex justify-content-end" th:if="${canDeleteTestCycles}">
+                        <button class="btn btn-sm btn-outline-danger" type="submit">
+                            <i class="bi bi-trash me-1"></i>Delete selected
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                            <tr>
+                                <th th:if="${canDeleteTestCycles}" style="width:2rem;">
+                                    <input type="checkbox" data-check-all title="Select all">
+                                </th>
+                                <th data-sort="cycleNumber" data-sort-param="cycleSort" data-dir-param="cycleDir"
+                                    data-page-param="cyclePage">Cycle</th>
+                                <th data-sort="name" data-sort-param="cycleSort" data-dir-param="cycleDir"
+                                    data-page-param="cyclePage">Name</th>
+                                <th data-sort="status" data-sort-param="cycleSort" data-dir-param="cycleDir"
+                                    data-page-param="cyclePage">Status</th>
+                                <th data-sort="startDate" data-sort-param="cycleSort" data-dir-param="cycleDir"
+                                    data-page-param="cyclePage">Start</th>
+                                <th data-sort="endDate" data-sort-param="cycleSort" data-dir-param="cycleDir"
+                                    data-page-param="cyclePage">End</th>
+                                <th></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="cycle : ${cyclePage.content}">
+                                <td th:if="${canDeleteTestCycles}">
+                                    <input type="checkbox" name="ids" th:value="${cycle.id}">
+                                </td>
+                                <td th:text="${cycle.cycleNumber}"></td>
+                                <td th:text="${cycle.name}"></td>
+                                <td th:text="${cycle.status}"></td>
+                                <td th:text="${cycle.startDate != null ? #temporals.format(cycle.startDate, 'yyyy-MM-dd') : ''}"></td>
+                                <td th:text="${cycle.endDate != null ? #temporals.format(cycle.endDate, 'yyyy-MM-dd') : ''}"></td>
+                                <td class="text-end">
+                                    <a class="btn btn-sm btn-outline-secondary" th:href="@{/test-cycles/{id}(id=${cycle.id})}">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(cyclePage.content)}">
+                                <td th:colspan="${canDeleteTestCycles ? 7 : 6}" class="empty-state">No test cycles</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </form>
+                <div class="card-footer bg-white d-flex justify-content-end">
+                    <nav th:if="${cyclePage.totalPages > 1}" aria-label="Pagination">
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item" th:classappend="${cyclePage.first} ? 'disabled'">
+                                <a class="page-link"
+                                   th:href="@{/change-requests/{id}(id=${cr.id}, tab='cycles', cycleSearch=${cycleCriteria.search}, cycleStatus=${cycleCriteria.status}, cycleSort=${cycleSort}, cycleDir=${cycleDir}, cyclePage=${cyclePage.number - 1})}">Previous</a>
+                            </li>
+                            <li class="page-item disabled">
+                                <span class="page-link" th:text="'Page ' + ${cyclePage.number + 1} + ' of ' + ${cyclePage.totalPages}"></span>
+                            </li>
+                            <li class="page-item" th:classappend="${cyclePage.last} ? 'disabled'">
+                                <a class="page-link"
+                                   th:href="@{/change-requests/{id}(id=${cr.id}, tab='cycles', cycleSearch=${cycleCriteria.search}, cycleStatus=${cycleCriteria.status}, cycleSort=${cycleSort}, cycleDir=${cycleDir}, cyclePage=${cyclePage.number + 1})}">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" th:classappend="${tab == 'cases'} ? 'show active'" id="cases">
+            <div class="d-flex justify-content-end gap-2 mb-2">
+                <a class="btn btn-sm btn-outline-secondary" th:if="${canEditTestCases}"
+                   th:href="@{/test-cases/upload}">
+                    <i class="bi bi-upload me-1"></i>Bulk Import
+                </a>
+                <a class="btn btn-sm btn-primary" th:if="${canEditTestCases}"
+                   th:href="@{/test-cases/new(crId=${cr.id})}">
+                    <i class="bi bi-plus-lg me-1"></i>New Test Case
+                </a>
+            </div>
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h3 class="h6 mb-0">Test Case Review</h3>
+                        <span class="badge badge-soft"
+                              th:text="${cr.tcReviewStatus != null ? cr.tcReviewStatus.label() : 'Not submitted'}"></span>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 align-items-end">
+                        <form th:if="${canSendReview}"
+                              th:action="@{/change-requests/{id}/test-case-review/send(id=${cr.id})}"
+                              method="post" class="d-flex gap-2 align-items-end">
+                            <div>
+                                <label class="form-label mb-1" for="reviewGroup">Ready for review by</label>
+                                <select class="form-select form-select-sm" id="reviewGroup" name="reviewGroup"
+                                        th:disabled="${!hasTestCases}">
+                                    <option th:each="stage : ${reviewStages}" th:value="${stage}"
+                                            th:selected="${stage == selectedReviewStage}"
+                                            th:text="${stage.label()}"></option>
+                                </select>
+                            </div>
+                            <button class="btn btn-sm btn-primary" type="submit"
+                                    th:disabled="${!hasTestCases}"
+                                    th:title="${hasTestCases ? '' : 'Add at least one test case to start the review'}">Review</button>
+                        </form>
+                        <span class="text-muted small" th:if="${canSendReview and !hasTestCases}">
+                            Add at least one test case before sending for review.
+                        </span>
+                        <form th:if="${canConfirmReview}"
+                              th:action="@{/change-requests/{id}/test-case-review/confirm(id=${cr.id})}" method="post">
+                            <button class="btn btn-sm btn-success" type="submit">
+                                Confirm
+                                <span th:if="${cr.tcReviewStatus != null and cr.tcReviewStatus.stage() != null}"
+                                      th:text="${cr.tcReviewStatus.stage().label()}"></span> review
+                            </button>
+                        </form>
+                        <form th:if="${canReopenReview}"
+                              th:action="@{/change-requests/{id}/test-case-review/reopen(id=${cr.id})}" method="post">
+                            <button class="btn btn-sm btn-outline-warning" type="submit">Reopen review</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="card mb-3">
+                <div class="card-body">
+                    <form th:action="@{/change-requests/{id}(id=${cr.id})}" th:object="${caseCriteria}" method="get"
+                          class="row g-2">
+                        <input type="hidden" name="tab" value="cases">
+                        <input type="hidden" name="caseSort" th:value="${caseSort}">
+                        <input type="hidden" name="caseDir" th:value="${caseDir}">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control form-control-sm" th:field="*{search}"
+                                   placeholder="Number or title">
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select form-select-sm" th:field="*{status}">
+                                <option value="">All statuses</option>
+                                <option th:each="s : ${T(com.duc.crqa.common.enums.TestCaseStatus).values()}"
+                                        th:value="${s}" th:text="${s}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-primary btn-sm w-100" type="submit"><i class="bi bi-search"></i></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="card">
+                <form th:action="@{/test-cases/bulk-execute}" method="post">
+                    <input type="hidden" name="crId" th:value="${cr.id}">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2"
+                         th:if="${canEditTestCases or canDeleteTestCases}">
+                        <div class="d-flex align-items-center gap-2" th:if="${canEditTestCases}">
+                            <select class="form-select form-select-sm" name="status" required style="width:auto;"
+                                    title="Status to record for the selected test cases">
+                                <option value="">Set status&hellip;</option>
+                                <option th:each="s : ${T(com.duc.crqa.common.enums.TestCaseStatus).values()}"
+                                        th:value="${s}" th:text="${s}"></option>
+                            </select>
+                            <input type="text" class="form-control form-control-sm" name="actualResult"
+                                   placeholder="Actual result (optional - blank keeps the existing one)"
+                                   style="width:22rem;">
+                            <button class="btn btn-sm btn-primary" type="submit">
+                                <i class="bi bi-check2-square me-1"></i>Execute selected
+                            </button>
+                        </div>
+                        <button class="btn btn-sm btn-outline-danger" type="submit" th:if="${canDeleteTestCases}"
+                                th:formaction="@{/test-cases/bulk-delete}"
+                                data-confirm="Delete the selected test case(s)?">
+                            <i class="bi bi-trash me-1"></i>Delete selected
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                            <tr>
+                                <th th:if="${canEditTestCases or canDeleteTestCases}" style="width:2rem;">
+                                    <input type="checkbox" data-check-all title="Select all">
+                                </th>
+                                <th data-sort="testCaseNumber" data-sort-param="caseSort" data-dir-param="caseDir"
+                                    data-page-param="casePage">Number</th>
+                                <th data-sort="title" data-sort-param="caseSort" data-dir-param="caseDir"
+                                    data-page-param="casePage">Title</th>
+                                <th data-sort="cycle.cycleNumber" data-sort-param="caseSort" data-dir-param="caseDir"
+                                    data-page-param="casePage">Cycle</th>
+                                <th data-sort="status" data-sort-param="caseSort" data-dir-param="caseDir"
+                                    data-page-param="casePage">Status</th>
+                                <th data-sort="executedBy" data-sort-param="caseSort" data-dir-param="caseDir"
+                                    data-page-param="casePage">Executed By</th>
+                                <th></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="testCase : ${casePage.content}">
+                                <td th:if="${canEditTestCases or canDeleteTestCases}">
+                                    <input type="checkbox" name="ids" th:value="${testCase.id}">
+                                </td>
+                                <td th:text="${testCase.testCaseNumber}"></td>
+                                <td th:text="${testCase.title}"></td>
+                                <td th:text="${testCase.cycle != null ? testCase.cycle.displayLabel() : ''}"></td>
+                                <td th:text="${testCase.status}"></td>
+                                <td th:text="${testCase.executedBy != null ? userMap[testCase.executedBy]?.displayLabel() : ''}"></td>
+                                <td class="text-end">
+                                    <a class="btn btn-sm btn-outline-secondary" th:href="@{/test-cases/{id}(id=${testCase.id})}">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(casePage.content)}">
+                                <td th:colspan="${(canEditTestCases or canDeleteTestCases) ? 7 : 6}" class="empty-state">No test cases</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </form>
+                <div class="card-footer bg-white d-flex justify-content-end">
+                    <nav th:if="${casePage.totalPages > 1}" aria-label="Pagination">
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item" th:classappend="${casePage.first} ? 'disabled'">
+                                <a class="page-link"
+                                   th:href="@{/change-requests/{id}(id=${cr.id}, tab='cases', caseSearch=${caseCriteria.search}, caseStatus=${caseCriteria.status}, caseSort=${caseSort}, caseDir=${caseDir}, casePage=${casePage.number - 1})}">Previous</a>
+                            </li>
+                            <li class="page-item disabled">
+                                <span class="page-link" th:text="'Page ' + ${casePage.number + 1} + ' of ' + ${casePage.totalPages}"></span>
+                            </li>
+                            <li class="page-item" th:classappend="${casePage.last} ? 'disabled'">
+                                <a class="page-link"
+                                   th:href="@{/change-requests/{id}(id=${cr.id}, tab='cases', caseSearch=${caseCriteria.search}, caseStatus=${caseCriteria.status}, caseSort=${caseSort}, caseDir=${caseDir}, casePage=${casePage.number + 1})}">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" th:classappend="${tab == 'bugs'} ? 'show active'" id="bugs">
+            <div class="d-flex justify-content-end gap-2 mb-2">
+                <a class="btn btn-sm btn-outline-secondary" th:if="${canEditBugs}"
+                   th:href="@{/bugs/upload}">
+                    <i class="bi bi-upload me-1"></i>Bulk Import
+                </a>
+                <a class="btn btn-sm btn-primary" th:if="${canEditBugs}"
+                   th:href="@{/bugs/new(crId=${cr.id})}">
+                    <i class="bi bi-plus-lg me-1"></i>New Bug
+                </a>
+            </div>
+            <div class="card mb-3">
+                <div class="card-body">
+                    <form th:action="@{/change-requests/{id}(id=${cr.id})}" th:object="${bugCriteria}" method="get"
+                          class="row g-2">
+                        <input type="hidden" name="tab" value="bugs">
+                        <input type="hidden" name="bugSort" th:value="${bugSort}">
+                        <input type="hidden" name="bugDir" th:value="${bugDir}">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control form-control-sm" th:field="*{search}"
+                                   placeholder="Number or title">
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select form-select-sm" th:field="*{status}">
+                                <option value="">All statuses</option>
+                                <option th:each="s : ${T(com.duc.crqa.common.enums.BugStatus).values()}"
+                                        th:value="${s}" th:text="${s}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select form-select-sm" th:field="*{severity}">
+                                <option value="">All severities</option>
+                                <option th:each="s : ${T(com.duc.crqa.common.enums.Severity).values()}"
+                                        th:value="${s}" th:text="${s}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-primary btn-sm w-100" type="submit"><i class="bi bi-search"></i></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="card">
+                <form th:action="@{/bugs/bulk-delete}" method="post"
+                      data-confirm="Delete the selected bug(s)? Comments, history and attachments will also be removed.">
+                    <input type="hidden" name="crId" th:value="${cr.id}">
+                    <div class="card-header bg-white d-flex justify-content-end" th:if="${canDeleteBugs}">
+                        <button class="btn btn-sm btn-outline-danger" type="submit">
+                            <i class="bi bi-trash me-1"></i>Delete selected
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                            <tr>
+                                <th th:if="${canDeleteBugs}" style="width:2rem;">
+                                    <input type="checkbox" data-check-all title="Select all">
+                                </th>
+                                <th data-sort="bugNumber" data-sort-param="bugSort" data-dir-param="bugDir"
+                                    data-page-param="bugPage">Bug</th>
+                                <th data-sort="title" data-sort-param="bugSort" data-dir-param="bugDir"
+                                    data-page-param="bugPage">Title</th>
+                                <th data-sort="severity" data-sort-param="bugSort" data-dir-param="bugDir"
+                                    data-page-param="bugPage">Severity</th>
+                                <th data-sort="priority" data-sort-param="bugSort" data-dir-param="bugDir"
+                                    data-page-param="bugPage">Priority</th>
+                                <th data-sort="status" data-sort-param="bugSort" data-dir-param="bugDir"
+                                    data-page-param="bugPage">Status</th>
+                                <th></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="bug : ${bugPage.content}">
+                                <td th:if="${canDeleteBugs}">
+                                    <input type="checkbox" name="ids" th:value="${bug.id}">
+                                </td>
+                                <td th:text="${bug.bugNumber}"></td>
+                                <td th:text="${bug.title}"></td>
+                                <td>
+                                    <span class="badge badge-soft"
+                                          th:classappend="'severity-' + ${#strings.toLowerCase(bug.severity.name())}"
+                                          th:text="${bug.severity}"></span>
+                                </td>
+                                <td th:text="${bug.priority}"></td>
+                                <td>
+                                    <span class="badge badge-soft"
+                                          th:classappend="'status-' + ${#strings.toLowerCase(#strings.replace(bug.status.name(),'_','-'))}"
+                                          th:text="${bug.status}"></span>
+                                </td>
+                                <td class="text-end">
+                                    <a class="btn btn-sm btn-outline-secondary" th:href="@{/bugs/{id}(id=${bug.id})}">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(bugPage.content)}">
+                                <td th:colspan="${canDeleteBugs ? 7 : 6}" class="empty-state">No bugs raised against this CR</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </form>
+                <div class="card-footer bg-white d-flex justify-content-end">
+                    <nav th:if="${bugPage.totalPages > 1}" aria-label="Pagination">
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item" th:classappend="${bugPage.first} ? 'disabled'">
+                                <a class="page-link"
+                                   th:href="@{/change-requests/{id}(id=${cr.id}, tab='bugs', bugSearch=${bugCriteria.search}, bugStatus=${bugCriteria.status}, bugSeverity=${bugCriteria.severity}, bugSort=${bugSort}, bugDir=${bugDir}, bugPage=${bugPage.number - 1})}">Previous</a>
+                            </li>
+                            <li class="page-item disabled">
+                                <span class="page-link" th:text="'Page ' + ${bugPage.number + 1} + ' of ' + ${bugPage.totalPages}"></span>
+                            </li>
+                            <li class="page-item" th:classappend="${bugPage.last} ? 'disabled'">
+                                <a class="page-link"
+                                   th:href="@{/change-requests/{id}(id=${cr.id}, tab='bugs', bugSearch=${bugCriteria.search}, bugStatus=${bugCriteria.status}, bugSeverity=${bugCriteria.severity}, bugSort=${bugSort}, bugDir=${bugDir}, bugPage=${bugPage.number + 1})}">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+</html>

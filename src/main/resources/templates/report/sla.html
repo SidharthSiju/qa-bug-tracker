@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>SLA &amp; Aging Report</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+        <div>
+            <h2 class="mb-0">SLA &amp; Aging Report</h2>
+            <p class="text-muted mb-0">
+                Open defects past &mdash; or close to &mdash; their SLA window, by severity and owner.
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-secondary" th:href="@{/reports/sla.csv}">
+                <i class="bi bi-download me-1"></i>Export CSV
+            </a>
+            <form th:if="${isAdmin}" th:action="@{/reports/sla/escalate}" method="post" class="mb-0"
+                  data-confirm="Notify the owners of every breached bug now?">
+                <button class="btn btn-primary" type="submit">
+                    <i class="bi bi-bell me-1"></i>Run escalation now
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card p-3 h-100">
+                <div class="text-muted small">Open bugs</div>
+                <div class="fs-3 fw-bold" th:text="${report.openBugs}">0</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 h-100">
+                <div class="text-muted small">Past SLA</div>
+                <div class="fs-3 fw-bold text-danger" th:text="${report.breached}">0</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 h-100">
+                <div class="text-muted small">Approaching SLA</div>
+                <div class="fs-3 fw-bold" th:text="${report.approaching}">0</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 h-100">
+                <div class="text-muted small">Within SLA</div>
+                <div class="fs-3 fw-bold text-success"
+                     th:text="${report.openBugs - report.breached - report.approaching}">0</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h3 class="h6 mb-0">By severity</h3>
+            <span class="text-muted small">A bug is late once it has been open longer than the SLA for its severity</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                <tr><th>Severity</th><th>Open</th><th>Past SLA</th><th>Approaching</th><th>Oldest (days)</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="row : ${report.bySeverity}">
+                    <td th:text="${row.group()}"></td>
+                    <td th:text="${row.total()}"></td>
+                    <td>
+                        <span class="badge badge-soft" th:if="${row.breached() > 0}"
+                              th:classappend="'sla-breached'" th:text="${row.breached()}"></span>
+                        <span th:unless="${row.breached() > 0}">0</span>
+                    </td>
+                    <td th:text="${row.approaching()}"></td>
+                    <td th:text="${row.oldestAgeDays()}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(report.bySeverity)}">
+                    <td colspan="5" class="empty-state">No open bugs</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-white"><h3 class="h6 mb-0">By assignee</h3></div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                        <tr><th>Assignee</th><th>Open</th><th>Past SLA</th><th>Approaching</th><th>Oldest</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="row : ${report.byAssignee}">
+                            <td th:text="${row.group()}"></td>
+                            <td th:text="${row.total()}"></td>
+                            <td th:text="${row.breached()}"></td>
+                            <td th:text="${row.approaching()}"></td>
+                            <td th:text="${row.oldestAgeDays()}"></td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(report.byAssignee)}">
+                            <td colspan="5" class="empty-state">No open bugs</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-white"><h3 class="h6 mb-0">By change request</h3></div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                        <tr><th>Change request</th><th>Open</th><th>Past SLA</th><th>Approaching</th><th>Oldest</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="row : ${report.byChangeRequest}">
+                            <td th:text="${row.group()}"></td>
+                            <td th:text="${row.total()}"></td>
+                            <td th:text="${row.breached()}"></td>
+                            <td th:text="${row.approaching()}"></td>
+                            <td th:text="${row.oldestAgeDays()}"></td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(report.byChangeRequest)}">
+                            <td colspan="5" class="empty-state">No open bugs</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="note mt-3 text-muted small">
+        The SLA hours per severity, and whether the daily escalation runs automatically, are configured in
+        <span class="mono">application.yml</span> under <span class="mono">app.sla.*</span> and can be reloaded at
+        runtime with <strong>Reload Config</strong>. An escalated bug is not escalated again for
+        <span class="mono">app.sla.escalate-every-hours</span> hours.
+    </div>
+</section>
+</body>
+</html>

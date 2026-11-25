@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Test Quality Report</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="mb-3">
+        <h2 class="mb-0">Test Quality Report</h2>
+        <p class="text-muted mb-0">CR development quality KPIs based on testing results</p>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <form th:action="@{/reports/quality}" th:object="${criteria}" method="get" class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Search</label>
+                    <input type="text" class="form-control form-control-sm" th:field="*{search}"
+                           placeholder="CR number or name">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">From Date</label>
+                    <input type="date" class="form-control form-control-sm" th:field="*{fromDate}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">To Date</label>
+                    <input type="date" class="form-control form-control-sm" th:field="*{toDate}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Project</label>
+                    <select class="form-select form-select-sm" th:field="*{projectId}">
+                        <option value="">All projects</option>
+                        <option th:each="project : ${projects}" th:value="${project.id}"
+                                th:text="${project.displayLabel()}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Status</label>
+                    <select class="form-select form-select-sm" th:field="*{status}">
+                        <option value="">All statuses</option>
+                        <option th:each="status : ${T(com.duc.crqa.common.enums.CrStatus).values()}"
+                                th:value="${status}" th:text="${status}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Priority</label>
+                    <select class="form-select form-select-sm" th:field="*{priority}">
+                        <option value="">All priorities</option>
+                        <option th:each="priority : ${T(com.duc.crqa.common.enums.CrPriority).values()}"
+                                th:value="${priority}" th:text="${priority}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Complexity</label>
+                    <select class="form-select form-select-sm" th:field="*{complexity}">
+                        <option value="">All complexity</option>
+                        <option th:each="complexity : ${T(com.duc.crqa.common.enums.Complexity).values()}"
+                                th:value="${complexity}" th:text="${complexity}"></option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">QA Lead</label>
+                    <select class="form-select form-select-sm" th:field="*{qaLeadId}">
+                        <option value="">All QA leads</option>
+                        <option th:each="user : ${qaLeads}" th:value="${user.id}"
+                                th:text="${user.displayLabel()}"></option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Development Owner</label>
+                    <select class="form-select form-select-sm" th:field="*{developmentOwnerId}">
+                        <option value="">All developers</option>
+                        <option th:each="user : ${developers}" th:value="${user.id}"
+                                th:text="${user.displayLabel()}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-primary btn-sm w-100" type="submit"><i class="bi bi-search"></i></button>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-outline-primary btn-sm w-100" type="submit"
+                            th:formaction="@{/reports/quality.csv}" title="Export CSV">
+                        <i class="bi bi-download me-1"></i>Export
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4 col-xl-3">
+            <div class="card p-3 h-100">
+                <div class="text-muted small">Overall Pass Rate</div>
+                <div class="fs-3 fw-bold" th:text="|${summary.overallPassRate}%|">0%</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-3">
+            <div class="card p-3 h-100">
+                <div class="text-muted small">Executed Test Cases</div>
+                <div class="fs-3 fw-bold" th:text="${summary.executedTestCases}">0</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-3">
+            <div class="card p-3 h-100">
+                <div class="text-muted small">Failed Test Cases</div>
+                <div class="fs-3 fw-bold" th:text="${summary.failedTestCases}">0</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-3">
+            <div class="card p-3 h-100">
+                <div class="text-muted small">Open Critical Bugs</div>
+                <div class="fs-3 fw-bold" th:text="${summary.criticalBugs}">0</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-3">
+            <div class="card p-3 h-100">
+                <div class="text-muted small">Escaped Defects</div>
+                <div class="fs-3 fw-bold" th:text="${summary.escapedDefects}">0</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-3">
+            <div class="card p-3 h-100">
+                <div class="text-muted small">Defect Density</div>
+                <div class="fs-3 fw-bold" th:text="${summary.overallDefectDensity}">0</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-3">
+            <div class="card p-3 h-100">
+                <div class="text-muted small">Avg QA Cycle Days</div>
+                <div class="fs-3 fw-bold" th:text="${summary.averageQaCycleDays}">0</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-lg-6">
+            <div class="card p-3 h-100">
+                <h3 class="h6">Test Case Execution</h3>
+                <canvas id="testStatusChart" height="220"></canvas>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card p-3 h-100">
+                <h3 class="h6">Defect Severity</h3>
+                <canvas id="bugSeverityChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-white">
+            <h3 class="h6 mb-0">CR Quality by Testing Results</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                <tr>
+                    <th data-sort="crNumber">CR</th>
+                    <th data-sort="project">Project</th>
+                    <th data-sort="status">Status</th>
+                    <th data-sort="totalTestCases">Total TC</th>
+                    <th data-sort="executedTestCases">Executed</th>
+                    <th data-sort="passedTestCases">Passed</th>
+                    <th data-sort="failedTestCases">Failed</th>
+                    <th data-sort="blockedTestCases">Blocked</th>
+                    <th data-sort="passRate">Pass Rate</th>
+                    <th data-sort="totalBugs">Total Bugs</th>
+                    <th data-sort="openBugs">Open</th>
+                    <th data-sort="criticalBugs">Critical</th>
+                    <th data-sort="escapedDefects">Escaped</th>
+                    <th data-sort="defectDensity">Defect Density</th>
+                    <th data-sort="qaCycleDays">QA Days</th>
+                    <th data-sort="plannedEndDate">Planned End</th>
+                    <th data-sort="overdue">SLA</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="row : ${page.content}">
+                    <td>
+                        <a th:href="@{/change-requests/{id}(id=${row.id})}" th:text="${row.crNumber}"></a>
+                        <div class="small text-muted" th:text="${row.crName}"></div>
+                    </td>
+                    <td th:text="${row.project}"></td>
+                    <td>
+                        <span class="badge badge-soft"
+                              th:classappend="'status-' + ${#strings.toLowerCase(#strings.replace(row.status.name(),'_','-'))}"
+                              th:text="${row.status}"></span>
+                    </td>
+                    <td th:text="${row.totalTestCases}"></td>
+                    <td th:text="${row.executedTestCases}"></td>
+                    <td th:text="${row.passedTestCases}"></td>
+                    <td th:text="${row.failedTestCases}"></td>
+                    <td th:text="${row.blockedTestCases}"></td>
+                    <td th:text="|${row.passRate}%|">0%</td>
+                    <td th:text="${row.totalBugs}"></td>
+                    <td th:text="${row.openBugs}"></td>
+                    <td>
+                        <span class="badge badge-soft severity-critical" th:text="${row.criticalBugs}"></span>
+                    </td>
+                    <td th:text="${row.escapedDefects}"></td>
+                    <td th:text="${row.defectDensity}"></td>
+                    <td th:text="${row.qaCycleDays}"></td>
+                    <td th:text="${row.plannedEndDate}"></td>
+                    <td>
+                        <span th:if="${row.overdue}" class="badge badge-soft sla-breached">Overdue</span>
+                        <span th:unless="${row.overdue}" class="badge badge-soft sla-within">On track</span>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(page.content)}">
+                    <td colspan="17" class="empty-state">No change requests found</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white d-flex justify-content-end">
+            <nav th:if="${page.totalPages > 1}" aria-label="Pagination">
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+                        <a class="page-link"
+                           th:href="@{/reports/quality(page=${page.number - 1}, size=${page.size}, search=${criteria.search}, projectId=${criteria.projectId}, status=${criteria.status}, priority=${criteria.priority}, complexity=${criteria.complexity}, qaLeadId=${criteria.qaLeadId}, developmentOwnerId=${criteria.developmentOwnerId}, fromDate=${criteria.fromDate}, toDate=${criteria.toDate})}">Previous</a>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link" th:text="'Page ' + ${page.number + 1} + ' of ' + ${page.totalPages}"></span>
+                    </li>
+                    <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+                        <a class="page-link"
+                           th:href="@{/reports/quality(page=${page.number + 1}, size=${page.size}, search=${criteria.search}, projectId=${criteria.projectId}, status=${criteria.status}, priority=${criteria.priority}, complexity=${criteria.complexity}, qaLeadId=${criteria.qaLeadId}, developmentOwnerId=${criteria.developmentOwnerId}, fromDate=${criteria.fromDate}, toDate=${criteria.toDate})}">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <script th:src="@{/vendor/chart.js/chart.umd.min.js}"></script>
+    <script th:inline="javascript">
+        const testStatusLabels = /*[[${testStatusLabels}]]*/ [];
+        const testStatusValues = /*[[${testStatusValues}]]*/ [];
+        const bugSeverityLabels = /*[[${bugSeverityLabels}]]*/ [];
+        const bugSeverityValues = /*[[${bugSeverityValues}]]*/ [];
+
+        function doughnut(id, labels, values) {
+            new Chart(document.getElementById(id), {
+                type: 'doughnut',
+                data: { labels: labels, datasets: [{ data: values }] },
+                options: { plugins: { legend: { position: 'bottom' } } }
+            });
+        }
+
+        doughnut('testStatusChart', testStatusLabels, testStatusValues);
+        doughnut('bugSeverityChart', bugSeverityLabels, bugSeverityValues);
+    </script>
+</section>
+</body>
+</html>

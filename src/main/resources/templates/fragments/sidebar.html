@@ -1,0 +1,49 @@
+<aside class="app-sidebar" id="appSidebar" th:fragment="sidebar" xmlns:th="http://www.thymeleaf.org"
+       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+    <div class="nav-section">Navigation</div>
+    <a class="app-nav-link" th:href="@{/dashboard}"><i class="bi bi-speedometer2"></i>Dashboard</a>
+    <a class="app-nav-link" th:href="@{/change-requests}"><i class="bi bi-kanban"></i>Change Requests</a>
+    <a class="app-nav-link" th:href="@{/bugs}"><i class="bi bi-bug"></i>Bugs</a>
+    <a class="app-nav-link" th:href="@{/test-cycles}"><i class="bi bi-arrow-repeat"></i>Test Cycles</a>
+    <a class="app-nav-link" th:href="@{/test-cases}"><i class="bi bi-check2-square"></i>Test Cases</a>
+
+    <div class="nav-section">Insights</div>
+    <a class="app-nav-link" th:href="@{/reports}"><i class="bi bi-file-earmark-bar-graph"></i>Reports</a>
+
+    <button class="nav-section nav-section-toggle" type="button" data-bs-toggle="collapse"
+            data-bs-target="#adminNav" aria-expanded="true" aria-controls="adminNav"
+            th:if="${isAdmin or canManageUsers}" title="Collapse or expand the Administration menu">
+        Administration <i class="bi bi-chevron-down nav-section-chevron"></i>
+    </button>
+    <div class="collapse show" id="adminNav" th:if="${isAdmin or canManageUsers}">
+        <a class="app-nav-link" th:if="${canManageUsers}" th:href="@{/admin/users}">
+            <i class="bi bi-people"></i>Users
+        </a>
+        <a class="app-nav-link" th:if="${isAdmin}" th:href="@{/admin/projects}">
+            <i class="bi bi-folder"></i>Projects
+        </a>
+        <a class="app-nav-link" th:if="${isAdmin}" th:href="@{/admin/export-all}">
+            <i class="bi bi-download"></i>Export All
+        </a>
+        <a class="app-nav-link" th:if="${isAdmin}" th:href="@{/admin/audit}">
+            <i class="bi bi-journal-text"></i>Audit Log
+        </a>
+        <a class="app-nav-link" th:if="${isAdmin}" th:href="@{/admin/analytics}">
+            <i class="bi bi-graph-up"></i>Analytics
+        </a>
+        <a class="app-nav-link" th:if="${isAdmin}" th:href="@{/admin/ui-settings}">
+            <i class="bi bi-sliders"></i>UI Settings
+        </a>
+        <a class="app-nav-link" th:if="${isAdmin}" th:href="@{/admin/jira-config}">
+            <i class="bi bi-plug"></i>JIRA Configuration
+        </a>
+        <a class="app-nav-link" th:if="${isAdmin}" th:href="@{/admin/mail-config}">
+            <i class="bi bi-envelope"></i>Email Settings
+        </a>
+        <form th:if="${isAdmin}" th:action="@{/admin/config/reload}" method="post" class="mt-2">
+            <button class="app-nav-link border-0 bg-transparent w-100 text-start" type="submit">
+                <i class="bi bi-arrow-clockwise"></i>Reload Config
+            </button>
+        </form>
+    </div>
+</aside>

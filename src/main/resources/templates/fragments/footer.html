@@ -1,0 +1,6 @@
+<footer class="app-footer" th:fragment="footer" xmlns:th="http://www.thymeleaf.org">
+    <div class="d-flex justify-content-between flex-wrap gap-2">
+        <span>CR Issue Tracker</span>
+        <span th:text="'© ' + ${#temporals.year(#temporals.createNow())} + ' Internal Quality Platform'"></span>
+    </div>
+</footer>

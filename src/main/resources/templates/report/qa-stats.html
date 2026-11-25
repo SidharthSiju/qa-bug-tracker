@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Test Case &amp; Bug Statistics</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="mb-3">
+        <h2 class="mb-0">Test Case &amp; Bug Statistics</h2>
+        <p class="text-muted mb-0">Test execution and defect statistics per QA Lead and QA Tester</p>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <form th:action="@{/reports/qa-stats}" th:object="${criteria}" method="get" class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">Search</label>
+                    <input type="text" class="form-control form-control-sm" th:field="*{search}"
+                           placeholder="QA member name or username">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">From Date</label>
+                    <input type="date" class="form-control form-control-sm" th:field="*{fromDate}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">To Date</label>
+                    <input type="date" class="form-control form-control-sm" th:field="*{toDate}">
+                </div>
+                <div class="col-md-1">
+                    <button class="btn btn-primary btn-sm w-100" type="submit"><i class="bi bi-search"></i></button>
+                </div>
+                <div class="col-md-1">
+                    <button class="btn btn-outline-primary btn-sm w-100" type="submit"
+                            th:formaction="@{/reports/qa-stats.csv}" title="Export CSV">
+                        <i class="bi bi-download me-1"></i>Export
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4 col-xl-3">
+            <div class="card p-3 h-100">
+                <div class="text-muted small">QA Members</div>
+                <div class="fs-3 fw-bold" th:text="${summary.qaMembers}">0</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-3">
+            <div class="card p-3 h-100">
+                <div class="text-muted small">Test Cases Executed</div>
+                <div class="fs-3 fw-bold" th:text="${summary.executedTestCases}">0</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-3">
+            <div class="card p-3 h-100">
+                <div class="text-muted small">Overall Pass Rate</div>
+                <div class="fs-3 fw-bold" th:text="|${summary.overallPassRate}%|">0%</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-3">
+            <div class="card p-3 h-100">
+                <div class="text-muted small">Bugs Raised</div>
+                <div class="fs-3 fw-bold" th:text="${summary.bugsRaised}">0</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-3">
+            <div class="card p-3 h-100">
+                <div class="text-muted small">Open Bugs</div>
+                <div class="fs-3 fw-bold" th:text="${summary.openBugs}">0</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-3">
+            <div class="card p-3 h-100">
+                <div class="text-muted small">Open Critical Bugs</div>
+                <div class="fs-3 fw-bold" th:text="${summary.criticalBugs}">0</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-lg-6">
+            <div class="card p-3 h-100">
+                <h3 class="h6">Bugs Raised per QA Member</h3>
+                <canvas id="qaMemberBugsChart" height="220"></canvas>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card p-3 h-100">
+                <h3 class="h6">Test Case Execution Outcomes</h3>
+                <canvas id="testOutcomeChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-white">
+            <h3 class="h6 mb-0">Statistics per QA Member</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                <tr>
+                    <th data-sort="displayName">Member</th>
+                    <th data-sort="role">Role</th>
+                    <th data-sort="executedTestCases">Executed</th>
+                    <th data-sort="passedTestCases">Passed</th>
+                    <th data-sort="failedTestCases">Failed</th>
+                    <th data-sort="blockedTestCases">Blocked</th>
+                    <th data-sort="notApplicableTestCases">N/A</th>
+                    <th data-sort="passRate">Pass Rate</th>
+                    <th data-sort="bugsRaised">Bugs Raised</th>
+                    <th data-sort="openBugs">Open</th>
+                    <th data-sort="criticalBugs">Critical</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="row : ${page.content}">
+                    <td>
+                        <span th:text="${row.displayName}"></span>
+                        <div class="small text-muted" th:text="${row.username}"></div>
+                    </td>
+                    <td>
+                        <span class="badge badge-soft"
+                              th:text="${#strings.replace(row.role, '_', ' ')}"></span>
+                    </td>
+                    <td th:text="${row.executedTestCases}"></td>
+                    <td th:text="${row.passedTestCases}"></td>
+                    <td th:text="${row.failedTestCases}"></td>
+                    <td th:text="${row.blockedTestCases}"></td>
+                    <td th:text="${row.notApplicableTestCases}"></td>
+                    <td th:text="|${row.passRate}%|">0%</td>
+                    <td th:text="${row.bugsRaised}"></td>
+                    <td th:text="${row.openBugs}"></td>
+                    <td>
+                        <span class="badge badge-soft severity-critical" th:text="${row.criticalBugs}"></span>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(page.content)}">
+                    <td colspan="11" class="empty-state">No QA members found</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white d-flex justify-content-end">
+            <nav th:if="${page.totalPages > 1}" aria-label="Pagination">
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+                        <a class="page-link"
+                           th:href="@{/reports/qa-stats(page=${page.number - 1}, size=${page.size}, search=${criteria.search}, fromDate=${criteria.fromDate}, toDate=${criteria.toDate})}">Previous</a>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link" th:text="'Page ' + ${page.number + 1} + ' of ' + ${page.totalPages}"></span>
+                    </li>
+                    <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+                        <a class="page-link"
+                           th:href="@{/reports/qa-stats(page=${page.number + 1}, size=${page.size}, search=${criteria.search}, fromDate=${criteria.fromDate}, toDate=${criteria.toDate})}">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <script th:src="@{/vendor/chart.js/chart.umd.min.js}"></script>
+    <script th:inline="javascript">
+        const qaMemberLabels = /*[[${qaMemberLabels}]]*/ [];
+        const qaMemberBugs = /*[[${qaMemberBugs}]]*/ [];
+        const testOutcomeLabels = /*[[${testOutcomeLabels}]]*/ [];
+        const testOutcomeValues = /*[[${testOutcomeValues}]]*/ [];
+
+        new Chart(document.getElementById('qaMemberBugsChart'), {
+            type: 'bar',
+            data: {
+                labels: qaMemberLabels,
+                datasets: [{ label: 'Bugs raised', data: qaMemberBugs }]
+            },
+            options: {
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+            }
+        });
+
+        new Chart(document.getElementById('testOutcomeChart'), {
+            type: 'doughnut',
+            data: { labels: testOutcomeLabels, datasets: [{ data: testOutcomeValues }] },
+            options: { plugins: { legend: { position: 'bottom' } } }
+        });
+    </script>
+</section>
+</body>
+</html>

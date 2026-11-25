@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Test Cases</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-start mb-3">
+        <div>
+            <h2 class="mb-0">Test Cases</h2>
+            <p class="text-muted mb-0" th:if="${cycle != null}" th:text="'For ' + ${cycle.displayLabel()}"></p>
+            <p class="text-muted mb-0" th:if="${cycle == null and cr != null}" th:text="'For ' + ${cr.crNumber}"></p>
+        </div>
+        <div class="d-flex gap-2" th:if="${canEditTestCases}">
+            <div class="btn-group">
+                <a class="btn btn-outline-secondary" th:href="@{/test-cases/upload}">
+                    <i class="bi bi-upload me-1"></i>Bulk Import
+                </a>
+                <a class="btn btn-outline-secondary" th:href="@{/test-cases/upload/template}"
+                   title="Download sample CSV">
+                    <i class="bi bi-info-circle"></i>
+                </a>
+            </div>
+            <a class="btn btn-primary" th:href="@{/test-cases/new}">
+                <i class="bi bi-plus-lg me-1"></i>New Test Case
+            </a>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <form th:action="@{/test-cases}" th:object="${criteria}" method="get" class="row g-2">
+                <div class="col-md-4">
+                    <input type="text" class="form-control form-control-sm" th:field="*{search}"
+                           placeholder="Number or title">
+                </div>
+                <div class="col-md-4">
+                    <select class="form-select form-select-sm" th:field="*{crId}">
+                        <option value="">All CRs</option>
+                        <option th:each="crOption : ${crs}" th:value="${crOption.id}"
+                                th:text="${crOption.crNumber}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select form-select-sm" th:field="*{status}">
+                        <option value="">All statuses</option>
+                        <option th:each="status : ${T(com.duc.crqa.common.enums.TestCaseStatus).values()}"
+                                th:value="${status}" th:text="${status}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-primary btn-sm w-100" type="submit"><i class="bi bi-search"></i></button>
+                </div>
+                <input type="hidden" th:field="*{cycleId}">
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <form th:action="@{/test-cases/bulk-execute}" method="post">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2"
+                 th:if="${canEditTestCases or canDeleteTestCases}">
+                <div class="d-flex align-items-center gap-2" th:if="${canEditTestCases}">
+                    <select class="form-select form-select-sm" name="status" required style="width:auto;"
+                            title="Status to record for the selected test cases">
+                        <option value="">Set status&hellip;</option>
+                        <option th:each="s : ${T(com.duc.crqa.common.enums.TestCaseStatus).values()}"
+                                th:value="${s}" th:text="${s}"></option>
+                    </select>
+                    <input type="text" class="form-control form-control-sm" name="actualResult"
+                           placeholder="Actual result (optional - blank keeps the existing one)" style="width:22rem;">
+                    <button class="btn btn-sm btn-primary" type="submit">
+                        <i class="bi bi-check2-square me-1"></i>Execute selected
+                    </button>
+                </div>
+                <button class="btn btn-sm btn-outline-danger" type="submit" th:if="${canDeleteTestCases}"
+                        th:formaction="@{/test-cases/bulk-delete}"
+                        data-confirm="Delete the selected test case(s)?">
+                    <i class="bi bi-trash me-1"></i>Delete selected
+                </button>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                    <tr><th th:if="${canEditTestCases or canDeleteTestCases}" style="width:2rem;"><input type="checkbox" data-check-all title="Select all"></th><th data-sort="testCaseNumber">Number</th><th data-sort="title">Summary</th><th data-sort="cr.crNumber">CR</th><th data-sort="cycle.cycleNumber">Cycle</th><th data-sort="priority">Priority</th><th data-sort="status">Status</th><th data-sort="executedBy">Executed By</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="testCase : ${page.content}">
+                        <td th:if="${canEditTestCases or canDeleteTestCases}"><input type="checkbox" name="ids" th:value="${testCase.id}"></td>
+                        <td th:text="${testCase.testCaseNumber}"></td>
+                        <td th:text="${testCase.title}"></td>
+                        <td th:text="${testCase.cr.crNumber}"></td>
+                        <td th:text="${testCase.cycle != null ? testCase.cycle.displayLabel() : ''}"></td>
+                        <td th:text="${testCase.priority}"></td>
+                        <td th:text="${testCase.status}"></td>
+                        <td th:text="${testCase.executedBy != null ? userMap[testCase.executedBy]?.displayLabel() : ''}"></td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-secondary" th:href="@{/test-cases/{id}(id=${testCase.id})}">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(page.content)}">
+                        <td th:colspan="${(canEditTestCases or canDeleteTestCases) ? 9 : 8}" class="empty-state">No test cases found</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </form>
+        <div class="card-footer bg-white d-flex justify-content-end">
+            <nav th:if="${page.totalPages > 1}" aria-label="Pagination">
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+                        <a class="page-link"
+                           th:href="@{/test-cases(page=${page.number - 1}, size=${page.size}, search=${criteria.search}, crId=${criteria.crId}, cycleId=${criteria.cycleId}, status=${criteria.status})}">Previous</a>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link" th:text="'Page ' + ${page.number + 1} + ' of ' + ${page.totalPages}"></span>
+                    </li>
+                    <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+                        <a class="page-link"
+                           th:href="@{/test-cases(page=${page.number + 1}, size=${page.size}, search=${criteria.search}, crId=${criteria.crId}, cycleId=${criteria.cycleId}, status=${criteria.status})}">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</section>
+</body>
+</html>

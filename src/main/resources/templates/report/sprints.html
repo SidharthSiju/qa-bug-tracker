@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Sprint Report</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="mb-3">
+        <h2 class="mb-0">Sprint Report</h2>
+        <p class="text-muted mb-0">Change requests, test execution and defects grouped by sprint</p>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <form th:action="@{/reports/sprints}" th:object="${criteria}" method="get" class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">Sprint</label>
+                    <input type="text" class="form-control form-control-sm" th:field="*{sprint}"
+                           placeholder="Sprint name">
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-primary btn-sm w-100" type="submit"><i class="bi bi-search"></i></button>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-outline-primary btn-sm w-100" type="submit"
+                            th:formaction="@{/reports/sprints.csv}" title="Export CSV">
+                        <i class="bi bi-download me-1"></i>Export
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4 col-xl-3">
+            <div class="card p-3 h-100">
+                <div class="text-muted small">Sprints</div>
+                <div class="fs-3 fw-bold" th:text="${summary.sprints}">0</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-3">
+            <div class="card p-3 h-100">
+                <div class="text-muted small">Change Requests</div>
+                <div class="fs-3 fw-bold" th:text="${summary.changeRequests}">0</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-3">
+            <div class="card p-3 h-100">
+                <div class="text-muted small">Overall Pass Rate</div>
+                <div class="fs-3 fw-bold" th:text="|${summary.overallPassRate}%|">0%</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-3">
+            <div class="card p-3 h-100">
+                <div class="text-muted small">Open Bugs</div>
+                <div class="fs-3 fw-bold" th:text="${summary.openBugs}">0</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-3">
+            <div class="card p-3 h-100">
+                <div class="text-muted small">Critical Bugs</div>
+                <div class="fs-3 fw-bold" th:text="${summary.criticalBugs}">0</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-3">
+            <div class="card p-3 h-100">
+                <div class="text-muted small">Escaped Defects</div>
+                <div class="fs-3 fw-bold" th:text="${summary.escapedDefects}">0</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                <tr>
+                    <th data-sort="sprint">Sprint</th>
+                    <th data-sort="changeRequests">CRs</th>
+                    <th data-sort="totalTestCases">Total TC</th>
+                    <th data-sort="executedTestCases">Executed</th>
+                    <th data-sort="passedTestCases">Passed</th>
+                    <th data-sort="failedTestCases">Failed</th>
+                    <th data-sort="blockedTestCases">Blocked</th>
+                    <th data-sort="passRate">Pass Rate</th>
+                    <th data-sort="totalBugs">Total Bugs</th>
+                    <th data-sort="openBugs">Open</th>
+                    <th data-sort="criticalBugs">Critical</th>
+                    <th data-sort="escapedDefects">Escaped</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="row : ${page.content}">
+                    <td class="fw-semibold">
+                        <a th:href="@{/reports/sprint-crs(sprint=${row.sprint})}" th:text="${row.sprint}"></a>
+                    </td>
+                    <td th:text="${row.changeRequests}"></td>
+                    <td th:text="${row.totalTestCases}"></td>
+                    <td th:text="${row.executedTestCases}"></td>
+                    <td th:text="${row.passedTestCases}"></td>
+                    <td th:text="${row.failedTestCases}"></td>
+                    <td th:text="${row.blockedTestCases}"></td>
+                    <td th:text="|${row.passRate}%|">0%</td>
+                    <td th:text="${row.totalBugs}"></td>
+                    <td th:text="${row.openBugs}"></td>
+                    <td>
+                        <span class="badge badge-soft severity-critical" th:text="${row.criticalBugs}"></span>
+                    </td>
+                    <td th:text="${row.escapedDefects}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(page.content)}">
+                    <td colspan="12" class="empty-state">No sprints found</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white d-flex justify-content-end">
+            <nav th:if="${page.totalPages > 1}" aria-label="Pagination">
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+                        <a class="page-link"
+                           th:href="@{/reports/sprints(page=${page.number - 1}, size=${page.size}, sprint=${criteria.sprint})}">Previous</a>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link" th:text="'Page ' + ${page.number + 1} + ' of ' + ${page.totalPages}"></span>
+                    </li>
+                    <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+                        <a class="page-link"
+                           th:href="@{/reports/sprints(page=${page.number + 1}, size=${page.size}, sprint=${criteria.sprint})}">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</section>
+</body>
+</html>

@@ -1,0 +1,2 @@
+username,displayName,email,password,active,roles
+new.tester,New Tester,new.tester@example.com,ChangeMe123!,true,QA_TESTER

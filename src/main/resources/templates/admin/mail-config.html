@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Email Settings</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="mb-3">
+        <h2 class="mb-0">Email Settings</h2>
+        <p class="text-muted mb-0">How notification email leaves the tracker, in addition to the in-app notifications.</p>
+    </div>
+
+    <div class="alert alert-secondary" th:if="${reason != null}">
+        <i class="bi bi-info-circle me-1"></i>
+        Notifications are currently <strong>in-app only</strong>: <span th:text="${reason}"></span>.
+    </div>
+    <div class="alert alert-success" th:if="${ready}">
+        <i class="bi bi-check-circle me-1"></i>
+        Email is configured &mdash; notifications are also sent through
+        <strong th:text="${transport.label}"></strong> to each recipient (unless they have opted out).
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <form th:action="@{/admin/mail-config}" method="post">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="true" id="enabled" name="enabled"
+                                   th:checked="${config.enabled}">
+                            <label class="form-check-label" for="enabled">Send notification email</label>
+                            <div class="form-text">
+                                When off, notifications are only shown inside the tracker. Nothing is ever sent to the
+                                internet: use your internal relay or adapter.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label d-block">Email service</label>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="transport" id="transportSmtp"
+                                   value="SMTP" th:checked="${transport.name() != 'SOAP'}">
+                            <label class="form-check-label" for="transportSmtp">SMTP relay</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="transport" id="transportSoap"
+                                   value="SOAP" th:checked="${transport.name() == 'SOAP'}">
+                            <label class="form-check-label" for="transportSoap">OSB SOAP API (email adapter)</label>
+                        </div>
+                        <div class="form-text">
+                            The selected service is used for every notification email. Both are configured below.
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="fromAddress">From address</label>
+                        <input type="text" class="form-control" id="fromAddress" name="fromAddress"
+                               th:value="${config.fromAddress}" placeholder="cr-tracker@example.com">
+                        <div class="form-text">Used by both services.</div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="timeoutSeconds">Timeout (seconds)</label>
+                        <input type="number" class="form-control" id="timeoutSeconds" name="timeoutSeconds" min="1"
+                               th:max="${timeoutLimit}" th:value="${config.timeoutSeconds}">
+                        <div class="form-text">Maximum <span th:text="${timeoutLimit}"></span>.</div>
+                    </div>
+                </div>
+
+                <!-- SMTP relay -->
+                <div id="smtpSettings" class="border-top mt-3 pt-3">
+                    <h3 class="h6 mb-0">SMTP relay <span class="badge ms-1" id="smtpState"></span></h3>
+                    <div class="form-text mb-2">Used for notification email when <strong>SMTP relay</strong> is selected above.</div>
+                    <div class="row g-3">
+                        <div class="col-md-5">
+                            <label class="form-label" for="host">SMTP host</label>
+                            <input type="text" class="form-control" id="host" name="host" th:value="${config.host}"
+                                   placeholder="smtp.example.local">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label" for="port">Port</label>
+                            <input type="number" class="form-control" id="port" name="port" min="1" max="65535"
+                                   th:value="${config.port}">
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" value="true" id="startTls" name="startTls"
+                                       th:checked="${config.startTls}">
+                                <label class="form-check-label" for="startTls">STARTTLS</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="username">Username (optional)</label>
+                            <input type="text" class="form-control" id="username" name="username"
+                                   th:value="${config.username}" autocomplete="off">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="password">Password</label>
+                            <input type="password" class="form-control" id="password" name="password"
+                                   th:value="${config.password}" autocomplete="new-password">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- OSB SOAP email adapter -->
+                <div id="soapSettings" class="border-top mt-3 pt-3">
+                    <h3 class="h6 mb-0">OSB SOAP API (email adapter) <span class="badge ms-1" id="soapState"></span></h3>
+                    <div class="form-text mb-2">
+                        Used for notification email when <strong>OSB SOAP API</strong> is selected above: the request below is
+                        POSTed to the endpoint for each notification.
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label" for="soapEndpoint">Endpoint URL</label>
+                            <input type="text" class="form-control" id="soapEndpoint" name="soapEndpoint"
+                                   th:value="${config.soapEndpoint}"
+                                   placeholder="{{sit_osb}}/EMAILAdapter/ProxyService/EmailWithAttachmentProxy">
+                            <div class="form-text">
+                                <span class="mono">{{placeholder}}</span> values come from the SOAP variables below.
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label" for="soapUsername">SOAP username</label>
+                            <input type="text" class="form-control" id="soapUsername" name="soapUsername"
+                                   th:value="${config.soapUsername}" autocomplete="off">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label" for="soapPassword">SOAP password</label>
+                            <input type="password" class="form-control" id="soapPassword" name="soapPassword"
+                                   th:value="${config.soapPassword}" autocomplete="new-password">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="soapVariables">SOAP variables</label>
+                            <textarea class="form-control mono" id="soapVariables" name="soapVariables" rows="5"
+                                      th:text="${config.soapVariables}"></textarea>
+                            <div class="form-text">
+                                One <span class="mono">name=value</span> per line, for example
+                                <span class="mono">sit_osb=https://osb-sit.example.com</span>. Blank lines and
+                                <span class="mono">#</span> comments are ignored.
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label" for="soapPayload">Request payload template</label>
+                            <textarea class="form-control mono" id="soapPayload" name="soapPayload" rows="18"
+                                      th:text="${config.soapPayload}"></textarea>
+                            <div class="form-text">
+                                Placeholders: <span class="mono">{{fromMailFromConfiguration}}</span>,
+                                <span class="mono">{{toMailDynamic}}</span>,
+                                <span class="mono">{{subjectDynamic}}</span>,
+                                <span class="mono">{{htmlBodyDynamic}}</span> (inserted as HTML, inside the CDATA),
+                                <span class="mono">{{username}}</span> / <span class="mono">{{password}}</span>
+                                (the SOAP credentials above) and any variable from the list. Values placed in XML are
+                                escaped automatically. Clearing the box restores the built-in template.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <button class="btn btn-primary" type="submit">Save</button>
+                    <span class="text-muted small ms-2">
+                        Defaults come from <span class="mono">app.mail.*</span> in <span class="mono">application.yml</span>;
+                        clearing a field restores the configured default.
+                    </span>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-white"><h3 class="h6 mb-0">Send a test email</h3></div>
+        <div class="card-body">
+            <form th:action="@{/admin/mail-config/test}" method="post" class="row g-2 align-items-end"
+                  data-disable-on-submit>
+                <div class="col-md-5">
+                    <label class="form-label" for="to">Send to</label>
+                    <input type="text" class="form-control" id="to" name="to" th:value="${testRecipient}"
+                           placeholder="you@example.com">
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-outline-primary" type="submit" th:disabled="${!ready}">
+                        <i class="bi bi-envelope me-1"></i>Send test email
+                    </button>
+                </div>
+                <div class="col-12">
+                    <div class="form-text">
+                        Save the settings first. It is sent through <strong th:text="${transport.label}"></strong>
+                        and the result, including any error from the relay or adapter, is reported here.
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card mt-3">
+        <div class="card-header bg-white"><h3 class="h6 mb-0">Who receives what</h3></div>
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0">
+                <thead><tr><th>Event</th><th>Emailed to</th></tr></thead>
+                <tbody>
+                <tr><td>Bug raised (critical)</td><td>the change request's QA Lead and SA Lead</td></tr>
+                <tr><td>Bug raised</td><td>the change request's QA Lead and SA Lead</td></tr>
+                <tr><td>Bug assigned</td><td>the assignee</td></tr>
+                <tr><td>Bug marked fixed</td><td>the change request's QA Lead and SA Lead</td></tr>
+                <tr><td>Bug ready for retest</td><td>every active QA Tester</td></tr>
+                <tr><td>Bug reopened</td><td>the assignee</td></tr>
+                <tr><td>SLA breached (escalation)</td><td>the assignee and the change request's QA Lead / SA Lead</td></tr>
+                <tr><td>Change request ready for QA / completed</td><td>the change request's QA Lead (and its creator)</td></tr>
+                <tr><td>Test case review sent</td><td>the review stage's lead</td></tr>
+                <tr><td>Change request updated from JIRA</td><td>the change request's QA Lead and SA Lead</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white text-muted small">
+            A user can switch notification email off for themselves on their user record (Users &rarr; Edit).
+        </div>
+    </div>
+
+    <script>
+        // Mark which of the two email services the saved settings are currently using. Both stay visible.
+        (function () {
+            var radios = document.querySelectorAll('input[name="transport"]');
+            var badges = {SMTP: document.getElementById('smtpState'), SOAP: document.getElementById('soapState')};
+            if (!radios.length || !badges.SMTP || !badges.SOAP) {
+                return;
+            }
+            function sync() {
+                var chosen = '';
+                Array.prototype.forEach.call(radios, function (radio) {
+                    if (radio.checked) {
+                        chosen = radio.value;
+                    }
+                });
+                Object.keys(badges).forEach(function (key) {
+                    var inUse = key === chosen;
+                    badges[key].className = 'badge ms-1 ' + (inUse ? 'text-bg-success' : 'text-bg-secondary');
+                    badges[key].textContent = inUse ? 'in use' : 'not used';
+                });
+            }
+            Array.prototype.forEach.call(radios, function (radio) {
+                radio.addEventListener('change', sync);
+            });
+            sync();
+        })();
+    </script>
+</section>
+</body>
+</html>

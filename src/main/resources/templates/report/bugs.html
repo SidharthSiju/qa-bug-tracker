@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Bug Report</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="mb-0">Bug Report</h2>
+            <p class="text-muted mb-0">Search bugs by date range and key fields</p>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <form th:action="@{/reports/bugs}" th:object="${criteria}" method="get" class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Search</label>
+                    <input type="text" class="form-control form-control-sm" th:field="*{search}"
+                           placeholder="Bug number, title or description">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">From Date</label>
+                    <input type="date" class="form-control form-control-sm" th:field="*{fromDate}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">To Date</label>
+                    <input type="date" class="form-control form-control-sm" th:field="*{toDate}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Change Request</label>
+                    <select class="form-select form-select-sm" th:field="*{crId}">
+                        <option value="">All CRs</option>
+                        <option th:each="cr : ${crs}" th:value="${cr.id}" th:text="${cr.crNumber}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Status</label>
+                    <select class="form-select form-select-sm" th:field="*{status}">
+                        <option value="">All statuses</option>
+                        <option th:each="status : ${T(com.duc.crqa.common.enums.BugStatus).values()}"
+                                th:value="${status}" th:text="${status}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Severity</label>
+                    <select class="form-select form-select-sm" th:field="*{severity}">
+                        <option value="">All severities</option>
+                        <option th:each="severity : ${T(com.duc.crqa.common.enums.Severity).values()}"
+                                th:value="${severity}" th:text="${severity}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Priority</label>
+                    <select class="form-select form-select-sm" th:field="*{priority}">
+                        <option value="">All priorities</option>
+                        <option th:each="priority : ${T(com.duc.crqa.common.enums.Priority).values()}"
+                                th:value="${priority}" th:text="${priority}"></option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Assigned To</label>
+                    <select class="form-select form-select-sm" th:field="*{assignedToId}">
+                        <option value="">All assignees</option>
+                        <option th:each="user : ${developers}" th:value="${user.id}"
+                                th:text="${user.displayLabel()}"></option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Reported By</label>
+                    <select class="form-select form-select-sm" th:field="*{reportedById}">
+                        <option value="">All reporters</option>
+                        <option th:each="user : ${qaUsers}" th:value="${user.id}"
+                                th:text="${user.displayLabel()}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Application</label>
+                    <input type="text" class="form-control form-control-sm" th:field="*{application}"
+                           placeholder="Application">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Module</label>
+                    <input type="text" class="form-control form-control-sm" th:field="*{module}" placeholder="Module">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Environment</label>
+                    <select class="form-select form-select-sm" th:field="*{environment}">
+                        <option value="">All envs</option>
+                        <option value="DEV">DEV</option>
+                        <option value="SIT">SIT</option>
+                        <option value="UAT">UAT</option>
+                        <option value="STG">STG</option>
+                        <option value="PROD">PROD</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Defect Category</label>
+                    <select class="form-select form-select-sm" th:field="*{defectCategory}">
+                        <option value="">All categories</option>
+                        <option th:each="category : ${T(com.duc.crqa.common.enums.DefectCategory).values()}"
+                                th:value="${category}" th:text="${category.label}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Test Phase</label>
+                    <select class="form-select form-select-sm" th:field="*{testPhaseFound}">
+                        <option value="">All phases</option>
+                        <option th:each="phase : ${T(com.duc.crqa.common.enums.TestPhase).values()}"
+                                th:value="${phase}" th:text="${phase}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Sprint</label>
+                    <input type="text" class="form-control form-control-sm" th:field="*{sprint}" placeholder="Sprint">
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-primary btn-sm w-100" type="submit"><i class="bi bi-search"></i></button>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-outline-primary btn-sm w-100" type="submit"
+                            th:formaction="@{/reports/bugs.csv}" title="Export CSV">
+                        <i class="bi bi-download me-1"></i>Export
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                <tr>
+                    <th data-sort="bugNumber">Bug</th>
+                    <th data-sort="title">Title</th>
+                    <th data-sort="defectCategory">Category</th>
+                    <th data-sort="testPhaseFound">Test Phase</th>
+                    <th data-sort="sprint">Sprint</th>
+                    <th data-sort="severity">Severity</th>
+                    <th data-sort="priority">Priority</th>
+                    <th data-sort="status">Status</th>
+                    <th data-sort="cr.crNumber">CR</th>
+                    <th data-sort="reportedBy.username">Reported By</th>
+                    <th data-sort="assignedTo.username">Assigned To</th>
+                    <th data-sort="reportedAt">Reported</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="bug : ${page.content}">
+                    <td>
+                        <a th:href="@{/bugs/{id}(id=${bug.id})}" th:text="${bug.bugNumber}"></a>
+                    </td>
+                    <td th:text="${bug.title}"></td>
+                    <td th:text="${bug.defectCategory?.label}"></td>
+                    <td th:text="${bug.testPhaseFound}"></td>
+                    <td th:text="${bug.sprint}"></td>
+                    <td>
+                        <span class="badge badge-soft"
+                              th:classappend="'severity-' + ${#strings.toLowerCase(bug.severity.name())}"
+                              th:text="${bug.severity}"></span>
+                    </td>
+                    <td th:text="${bug.priority}"></td>
+                    <td>
+                        <span class="badge badge-soft"
+                              th:classappend="'status-' + ${#strings.toLowerCase(#strings.replace(bug.status.name(),'_','-'))}"
+                              th:text="${bug.status}"></span>
+                    </td>
+                    <td th:text="${bug.cr?.crNumber}"></td>
+                    <td th:text="${bug.reportedBy?.displayLabel()}"></td>
+                    <td th:text="${bug.assignedTo?.displayLabel()}"></td>
+                    <td th:text="${#temporals.format(bug.reportedAt, 'yyyy-MM-dd')}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(page.content)}">
+                    <td colspan="12" class="empty-state">No bugs found</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white d-flex justify-content-end">
+            <nav th:if="${page.totalPages > 1}" aria-label="Pagination">
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+                        <a class="page-link"
+                           th:href="@{/reports/bugs(page=${page.number - 1}, size=${page.size}, search=${criteria.search}, crId=${criteria.crId}, status=${criteria.status}, severity=${criteria.severity}, priority=${criteria.priority}, assignedToId=${criteria.assignedToId}, reportedById=${criteria.reportedById}, application=${criteria.application}, module=${criteria.module}, environment=${criteria.environment}, sprint=${criteria.sprint}, defectCategory=${criteria.defectCategory}, testPhaseFound=${criteria.testPhaseFound}, fromDate=${criteria.fromDate}, toDate=${criteria.toDate})}">Previous</a>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link" th:text="'Page ' + ${page.number + 1} + ' of ' + ${page.totalPages}"></span>
+                    </li>
+                    <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+                        <a class="page-link"
+                           th:href="@{/reports/bugs(page=${page.number + 1}, size=${page.size}, search=${criteria.search}, crId=${criteria.crId}, status=${criteria.status}, severity=${criteria.severity}, priority=${criteria.priority}, assignedToId=${criteria.assignedToId}, reportedById=${criteria.reportedById}, application=${criteria.application}, module=${criteria.module}, environment=${criteria.environment}, sprint=${criteria.sprint}, defectCategory=${criteria.defectCategory}, testPhaseFound=${criteria.testPhaseFound}, fromDate=${criteria.fromDate}, toDate=${criteria.toDate})}">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</section>
+</body>
+</html>

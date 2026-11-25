@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>UI Settings</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="mb-3">
+        <h2 class="mb-0">UI Settings</h2>
+        <p class="text-muted mb-0">Theme, font and table page size — these apply to all users.</p>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form th:action="@{/admin/ui-settings}" method="post">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label" for="theme">Theme</label>
+                        <select class="form-select" id="theme" name="theme">
+                            <option th:each="t : ${themes}" th:value="${t}" th:selected="${t == settings.theme}"
+                                    th:text="${#strings.capitalize(t)}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="font">Font</label>
+                        <select class="form-select" id="font" name="font">
+                            <option th:each="f : ${fonts}" th:value="${f}" th:selected="${f == settings.font}"
+                                    th:text="${#strings.capitalize(f)}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="rowsPerPage">Rows per page</label>
+                        <select class="form-select" id="rowsPerPage" name="rowsPerPage">
+                            <option th:each="p : ${pageSizes}" th:value="${p}"
+                                    th:selected="${p == settings.rowsPerPage}" th:text="${p}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="fontSize">Table row font size</label>
+                        <select class="form-select" id="fontSize" name="fontSize">
+                            <option th:each="s : ${fontSizes}" th:value="${s}"
+                                    th:selected="${s == settings.fontSize}" th:text="${s + ' px'}"></option>
+                        </select>
+                        <div class="form-text">Applies to table rows only — headers are unchanged.</div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <button class="btn btn-primary" type="submit">Save</button>
+                    <span class="text-muted small ms-2">Applies globally on the next page load.</span>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+</body>
+</html>

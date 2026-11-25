@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Dashboard</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="mb-0">Dashboard</h2>
+            <p class="text-muted mb-0">QA delivery overview at a glance</p>
+        </div>
+        <a class="btn btn-primary" th:if="${canEditChangeRequests}" th:href="@{/change-requests/new}">
+            <i class="bi bi-plus-lg me-1"></i>New CR
+        </a>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="card kpi-card p-3 h-100">
+                <div class="text-muted small">Active CRs</div>
+                <div class="fs-3 fw-bold" th:text="${kpis['activeCrs']}">0</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="card p-3 h-100">
+                <div class="text-muted small">CRs in QA</div>
+                <div class="fs-3 fw-bold" th:text="${kpis['crsInQa']}">0</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="card p-3 h-100">
+                <div class="text-muted small">Open Bugs</div>
+                <div class="fs-3 fw-bold" th:text="${kpis['openBugs']}">0</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="card p-3 h-100">
+                <div class="text-muted small">Critical Bugs</div>
+                <div class="fs-3 fw-bold" th:text="${kpis['criticalBugs']}">0</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="card p-3 h-100">
+                <div class="text-muted small">Blocked CRs</div>
+                <div class="fs-3 fw-bold" th:text="${kpis['blockedCrs']}">0</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="card p-3 h-100">
+                <div class="text-muted small">Overdue Bugs</div>
+                <div class="fs-3 fw-bold" th:text="${kpis['overdueBugs']}">0</div>
+                <div class="small text-muted" th:text="${kpis['approachingBugs']} + ' approaching SLA'"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-lg-4">
+            <div class="card p-3 h-100">
+                <h3 class="h6">Bug Status</h3>
+                <canvas id="bugStatusChart" height="220"></canvas>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card p-3 h-100">
+                <h3 class="h6">Bug Severity</h3>
+                <canvas id="bugSeverityChart" height="220"></canvas>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card p-3 h-100">
+                <h3 class="h6">CR Status</h3>
+                <canvas id="crStatusChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h3 class="h6 mb-0">Sprint Report</h3>
+            <a class="btn btn-sm btn-outline-primary" th:href="@{/reports/sprints}">
+                <i class="bi bi-box-arrow-up-right me-1"></i>Open Sprint Report
+            </a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                <tr>
+                    <th>Sprint</th>
+                    <th>CRs</th>
+                    <th>Total TC</th>
+                    <th>Executed</th>
+                    <th>Passed</th>
+                    <th>Failed</th>
+                    <th>Blocked</th>
+                    <th>Pass Rate</th>
+                    <th>Total Bugs</th>
+                    <th>Open</th>
+                    <th>Critical</th>
+                    <th>Escaped</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="row : ${sprintRows}">
+                    <td class="fw-semibold">
+                        <a th:href="@{/reports/sprint-crs(sprint=${row.sprint})}" th:text="${row.sprint}"></a>
+                    </td>
+                    <td th:text="${row.changeRequests}"></td>
+                    <td th:text="${row.totalTestCases}"></td>
+                    <td th:text="${row.executedTestCases}"></td>
+                    <td th:text="${row.passedTestCases}"></td>
+                    <td th:text="${row.failedTestCases}"></td>
+                    <td th:text="${row.blockedTestCases}"></td>
+                    <td th:text="|${row.passRate}%|">0%</td>
+                    <td th:text="${row.totalBugs}"></td>
+                    <td th:text="${row.openBugs}"></td>
+                    <td>
+                        <span class="badge badge-soft severity-critical" th:text="${row.criticalBugs}"></span>
+                    </td>
+                    <td th:text="${row.escapedDefects}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(sprintRows)}">
+                    <td colspan="12" class="empty-state">No sprints found</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-white">
+            <h3 class="h6 mb-0">CR QA Progress</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                <tr>
+                    <th data-sort="crNumber">CR</th>
+                    <th data-sort="project">Project</th>
+                    <th data-sort="qaLead">QA Lead</th>
+                    <th data-sort="totalBugs">Total</th>
+                    <th data-sort="openBugs">Open</th>
+                    <th data-sort="criticalBugs">Critical</th>
+                    <th data-sort="retestingBugs">Retesting</th>
+                    <th data-sort="closedBugs">Closed</th>
+                    <th data-sort="status">Status</th>
+                    <th data-sort="plannedEndDate">Planned End</th>
+                    <th data-sort="overdue">SLA</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="row : ${crProgressPage.content}">
+                    <td>
+                        <a th:href="@{/change-requests/{id}(id=${row.id})}" th:text="${row.crNumber}"></a>
+                        <div class="small text-muted" th:text="${row.crName}"></div>
+                    </td>
+                    <td th:text="${row.project}"></td>
+                    <td th:text="${row.qaLead}"></td>
+                    <td th:text="${row.totalBugs}"></td>
+                    <td th:text="${row.openBugs}"></td>
+                    <td>
+                        <span class="badge badge-soft severity-critical" th:text="${row.criticalBugs}"></span>
+                    </td>
+                    <td th:text="${row.retestingBugs}"></td>
+                    <td th:text="${row.closedBugs}"></td>
+                    <td>
+                        <span class="badge badge-soft"
+                              th:classappend="'status-' + ${#strings.toLowerCase(#strings.replace(row.status.name(),'_','-'))}"
+                              th:text="${row.status}"></span>
+                    </td>
+                    <td th:text="${row.plannedEndDate}"></td>
+                    <td>
+                        <span th:if="${row.overdue}" class="badge badge-soft sla-breached">Overdue</span>
+                        <span th:unless="${row.overdue}" class="badge badge-soft sla-within">On track</span>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(crProgressPage.content)}">
+                    <td colspan="11" class="empty-state">No active change requests</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white d-flex justify-content-end">
+            <nav th:replace="~{fragments/pagination :: pagination(${crProgressPage})}"></nav>
+        </div>
+    </div>
+
+    <script th:src="@{/vendor/chart.js/chart.umd.min.js}"></script>
+    <script th:inline="javascript">
+        const bugStatusLabels = /*[[${bugStatusLabels}]]*/ [];
+        const bugStatusValues = /*[[${bugStatusValues}]]*/ [];
+        const bugSeverityLabels = /*[[${bugSeverityLabels}]]*/ [];
+        const bugSeverityValues = /*[[${bugSeverityValues}]]*/ [];
+        const crStatusLabels = /*[[${crStatusLabels}]]*/ [];
+        const crStatusValues = /*[[${crStatusValues}]]*/ [];
+
+        function doughnut(id, labels, values) {
+            new Chart(document.getElementById(id), {
+                type: 'doughnut',
+                data: { labels: labels, datasets: [{ data: values }] },
+                options: { plugins: { legend: { position: 'bottom' } } }
+            });
+        }
+
+        doughnut('bugStatusChart', bugStatusLabels, bugStatusValues);
+        doughnut('bugSeverityChart', bugSeverityLabels, bugSeverityValues);
+        doughnut('crStatusChart', crStatusLabels, crStatusValues);
+    </script>
+</section>
+</body>
+</html>

@@ -1,0 +1,38 @@
+Defect ID,Sprint,CR Number,Summary,Description,Defect Category,Test Phase Found,Severity,Priority,Status,Environment,Application,Module,Logged By,Assigned To,Steps to Reproduce,Expected Result,Actual Result
+BUG-001,Sprint 24,CR-1045,Payment gateway timeout on checkout,"Steps:
+1. Add item to cart
+2. Click checkout
+3. Select credit card
+Result: 504 gateway timeout error.",SIT - Fixed & Verified,SIT,Critical,Closed,Staging,QA Lead,Dev Owner,Checkout,qa.tester,siebel.developer,Add item then checkout,Payment succeeds,504 gateway timeout
+BUG-002,Sprint 66,OKQABUG-27735,Shamel 3.0 ,"Entertainment wallet redemption done, but OCC didn’t generate any CDR for this – no transaction received in downstream - 6091077",Re-test FAIL,SIT,P2,,,,Digitral,,qa.tester,siebel.developer,Add item then checkout,Payment succeeds,504 gateway timeout
+BUG-003,Sprint 66,OKQABUG-27736,Shamel 3.0 ,Lifestyle wallet is not showing in app - 6091077,Re-test FAIL,SIT,P2,,,,Digitral,,qa.tester,siebel.developer,Add item then checkout,Payment succeeds,504 gateway timeout
+BUG-004,Sprint 65,OKQABUG-28682,GTL OCC if first instllament=NO,"Steps:
+1. set the GTL first installment=NO
+2. add the GTL device
+3. after vlidate check the net price of GTL 
+Result: net price should is collected 
+ER:net price should be 0
+",fixed,SIT,P2,,SIT,bdivya,Dev Owner,,qa.tester,siebel.developer,Add item then checkout,Payment succeeds,504 gateway timeout
+BUG-005,Sprint 65,OKQABUG-28682,TOO order getting validation upon valoidate,"after added devices trying to  validate the TOO B2c to B2c order
+result:customer has 0 device promotionthis customer is not eligibile for 0 device prmotion",,SIT,P2,,SIT,bdivya,BRMS team ,,qa.tester,siebel.developer,Add item then checkout,Payment succeeds,504 gateway timeout
+BUG-006,Sprint 65,OKQABUG-28682,GTL OCC if first instllament=NO_upon validate_installment type adjust installment,"Steps:
+1. set the GTL first installment=NO
+2. add the GTL device in pre to post order
+3. trying to validate the pre to post order
+4.it is asking cutsomization
+5.did the customization
+Result: after customization GTL price is stamping automatically
+ER:GTL net price should be 0 
+",,SIT,P2,,SIT,bdivya,Dev Owner,,qa.tester,siebel.developer,Add item then checkout,Payment succeeds,504 gateway timeout
+BUG-007,Sprint 65,OKQABUG-28682,GTL OCC if first instllament=NO_upon validate_installment type contract extension,"Steps:
+1. set the GTL first installment=NO
+2. add the GTL device in TOO b2b to B2C
+3. trying to validate the TOO order
+4.it is asking cutsomization
+5.did the customization
+Result: after customization GTL price is stamping automatically
+ER:GTL net price should be 0 
+",fixed,SIT,P2,,SIT,bdivya,Dev Owner,,qa.tester,siebel.developer,Add item then checkout,Payment succeeds,504 gateway timeout
+BUG-008,Sprint 65,OKQABUG-28682,GTL extra also 3kd activation fee is stamping in order line items,"result:after adding the GTL extra 3Kd activation fee is stamping by adding GTL device from add device button 
+ER:for GTL main only 3kd activation fee is stamped
+",,SIT,P2,,SIT,bdivya,Dev Owner,,qa.tester,siebel.developer,Add item then checkout,Payment succeeds,504 gateway timeout

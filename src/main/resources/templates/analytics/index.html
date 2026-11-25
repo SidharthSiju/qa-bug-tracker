@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Analytics</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="mb-3">
+        <h2 class="mb-0">Analytics</h2>
+        <p class="text-muted mb-0">Activity and usage analytics (ADMIN only).</p>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <form th:action="@{/admin/analytics}" th:object="${criteria}" method="get" class="row g-2 align-items-end">
+                <input type="hidden" name="tab" th:value="${tab}">
+                <input type="hidden" name="sort" th:value="${sort}">
+                <input type="hidden" name="dir" th:value="${dir}">
+                <div class="col-md-2">
+                    <label class="form-label small mb-1">From</label>
+                    <input type="date" class="form-control form-control-sm" th:field="*{fromDate}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small mb-1">To</label>
+                    <input type="date" class="form-control form-control-sm" th:field="*{toDate}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small mb-1">User</label>
+                    <select class="form-select form-select-sm" th:field="*{userId}">
+                        <option value="">All users</option>
+                        <option th:each="u : ${users}" th:value="${u.id}" th:text="${u.displayLabel()}"></option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small mb-1">Search</label>
+                    <input type="text" class="form-control form-control-sm" th:field="*{search}"
+                           placeholder="Name / CR / test case">
+                </div>
+                <div class="col-md-2" th:if="${tab == 'bugs'}">
+                    <label class="form-label small mb-1">Group by</label>
+                    <select class="form-select form-select-sm" th:field="*{groupBy}">
+                        <option value="cr">Change request</option>
+                        <option value="testCase">Test case</option>
+                        <option value="developer">Developer</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button class="btn btn-primary btn-sm flex-grow-1" type="submit"><i class="bi bi-search"></i></button>
+                    <button class="btn btn-outline-success btn-sm flex-grow-1" type="submit"
+                            th:formaction="@{/admin/analytics/export}" title="Export to Excel">
+                        <i class="bi bi-file-earmark-excel"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-3" role="tablist">
+        <li class="nav-item" th:each="t : ${ {'users','bugs','execution','defects','time','crcycle'} }">
+            <a class="nav-link" th:classappend="${tab == t} ? 'active'"
+               th:href="@{/admin/analytics(tab=${t}, fromDate=${criteria.fromDate}, toDate=${criteria.toDate}, userId=${criteria.userId}, search=${criteria.search}, groupBy=${criteria.groupBy})}"
+               th:text="${t == 'users' ? 'User Activity' : (t == 'bugs' ? 'Bugs' : (t == 'execution' ? 'Test Execution' : (t == 'defects' ? 'Defects' : (t == 'time' ? 'Time Spent' : 'CR Cycle Time'))))}"></a>
+        </li>
+    </ul>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <!-- User activity -->
+                <thead th:if="${tab == 'users'}">
+                <tr>
+                    <th data-sort="member">User</th>
+                    <th data-sort="roles">Roles</th>
+                    <th data-sort="logins">Logins</th>
+                    <th data-sort="logouts">Logouts</th>
+                    <th data-sort="crCreated">CRs Created</th>
+                    <th data-sort="crUpdated">CRs Updated</th>
+                    <th data-sort="tcExecuted">Test Cases Executed</th>
+                    <th data-sort="bugsRaised">Bugs Raised</th>
+                    <th data-sort="timeSpentSeconds">Time Spent</th>
+                </tr>
+                </thead>
+                <tbody th:if="${tab == 'users'}">
+                <tr th:each="row : ${page.content}">
+                    <td th:text="${row.member}"></td>
+                    <td th:text="${row.roles}"></td>
+                    <td th:text="${row.logins}"></td>
+                    <td th:text="${row.logouts}"></td>
+                    <td th:text="${row.crCreated}"></td>
+                    <td th:text="${row.crUpdated}"></td>
+                    <td th:text="${row.tcExecuted}"></td>
+                    <td th:text="${row.bugsRaised}"></td>
+                    <td th:text="${T(java.lang.Math).round(row.timeSpentSeconds / 60.0) + ' min'}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(page.content)}">
+                    <td colspan="9" class="empty-state">No data for the selected filters</td>
+                </tr>
+                </tbody>
+
+                <!-- Bugs -->
+                <thead th:if="${tab == 'bugs'}">
+                <tr>
+                    <th data-sort="group">Group</th>
+                    <th data-sort="total">Total</th>
+                    <th data-sort="open">Open</th>
+                    <th data-sort="critical">Critical</th>
+                    <th data-sort="avgFixHours">Avg Fix (h)</th>
+                </tr>
+                </thead>
+                <tbody th:if="${tab == 'bugs'}">
+                <tr th:each="row : ${page.content}">
+                    <td th:text="${row.group}"></td>
+                    <td th:text="${row.total}"></td>
+                    <td th:text="${row.open}"></td>
+                    <td th:text="${row.critical}"></td>
+                    <td th:text="${row.avgFixHours}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(page.content)}">
+                    <td colspan="5" class="empty-state">No data for the selected filters</td>
+                </tr>
+                </tbody>
+
+                <!-- Test execution -->
+                <thead th:if="${tab == 'execution'}">
+                <tr>
+                    <th data-sort="member">Member</th>
+                    <th data-sort="executed">Executed</th>
+                    <th data-sort="passed">Passed</th>
+                    <th data-sort="failed">Failed</th>
+                    <th data-sort="blocked">Blocked</th>
+                    <th data-sort="notApplicable">Not Applicable</th>
+                    <th data-sort="passRate">Pass Rate %</th>
+                </tr>
+                </thead>
+                <tbody th:if="${tab == 'execution'}">
+                <tr th:each="row : ${page.content}">
+                    <td th:text="${row.member}"></td>
+                    <td th:text="${row.executed}"></td>
+                    <td th:text="${row.passed}"></td>
+                    <td th:text="${row.failed}"></td>
+                    <td th:text="${row.blocked}"></td>
+                    <td th:text="${row.notApplicable}"></td>
+                    <td th:text="${row.passRate}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(page.content)}">
+                    <td colspan="7" class="empty-state">No data for the selected filters</td>
+                </tr>
+                </tbody>
+
+                <!-- Defects -->
+                <thead th:if="${tab == 'defects'}">
+                <tr><th>Severity</th><th>Count</th></tr>
+                </thead>
+                <tbody th:if="${tab == 'defects'}">
+                <tr th:each="row : ${severityRows}">
+                    <td th:text="${row.label}"></td>
+                    <td th:text="${row.count}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(severityRows)}">
+                    <td colspan="2" class="empty-state">No defects for the selected filters</td>
+                </tr>
+                </tbody>
+
+                <!-- Time spent -->
+                <thead th:if="${tab == 'time'}">
+                <tr>
+                    <th data-sort="member">User</th>
+                    <th data-sort="feature">Feature</th>
+                    <th data-sort="totalSeconds">Time</th>
+                    <th data-sort="sessions">Sessions</th>
+                </tr>
+                </thead>
+                <tbody th:if="${tab == 'time'}">
+                <tr th:each="row : ${page.content}">
+                    <td th:text="${row.member}"></td>
+                    <td th:text="${row.feature}"></td>
+                    <td th:text="${T(java.lang.Math).round(row.totalSeconds / 60.0) + ' min'}"></td>
+                    <td th:text="${row.sessions}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(page.content)}">
+                    <td colspan="4" class="empty-state">No activity recorded yet</td>
+                </tr>
+                </tbody>
+
+                <!-- CR cycle time -->
+                <thead th:if="${tab == 'crcycle'}">
+                <tr>
+                    <th data-sort="crNumber">Epic Number</th>
+                    <th data-sort="crName">Name</th>
+                    <th data-sort="project">Project</th>
+                    <th data-sort="status">Status</th>
+                    <th data-sort="created">Created</th>
+                    <th data-sort="completed">Completed</th>
+                    <th data-sort="cycleDays">Cycle Days</th>
+                </tr>
+                </thead>
+                <tbody th:if="${tab == 'crcycle'}">
+                <tr th:each="row : ${page.content}">
+                    <td th:text="${row.crNumber}"></td>
+                    <td th:text="${row.crName}"></td>
+                    <td th:text="${row.project}"></td>
+                    <td th:text="${row.status}"></td>
+                    <td th:text="${row.created}"></td>
+                    <td th:text="${row.completed}"></td>
+                    <td th:text="${row.cycleDays}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(page.content)}">
+                    <td colspan="7" class="empty-state">No change requests for the selected filters</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card-footer bg-white d-flex justify-content-between" th:unless="${tab == 'defects'}">
+            <span class="text-muted small" th:text="${page.totalElements} + ' row(s)'"></span>
+            <nav th:if="${page.totalPages > 1}" aria-label="Pagination">
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+                        <a class="page-link"
+                           th:href="@{/admin/analytics(tab=${tab}, fromDate=${criteria.fromDate}, toDate=${criteria.toDate}, userId=${criteria.userId}, search=${criteria.search}, groupBy=${criteria.groupBy}, sort=${sort}, dir=${dir}, page=${page.number - 1})}">Previous</a>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link" th:text="'Page ' + ${page.number + 1} + ' of ' + ${page.totalPages}"></span>
+                    </li>
+                    <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+                        <a class="page-link"
+                           th:href="@{/admin/analytics(tab=${tab}, fromDate=${criteria.fromDate}, toDate=${criteria.toDate}, userId=${criteria.userId}, search=${criteria.search}, groupBy=${criteria.groupBy}, sort=${sort}, dir=${dir}, page=${page.number + 1})}">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <div class="card mt-3" th:if="${tab == 'defects'}">
+        <div class="card-header bg-white"><h3 class="h6 mb-0">Defects by status</h3></div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Status</th><th>Count</th></tr></thead>
+                <tbody>
+                <tr th:each="row : ${statusRows}">
+                    <td th:text="${row.label}"></td>
+                    <td th:text="${row.count}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(statusRows)}">
+                    <td colspan="2" class="empty-state">No defects for the selected filters</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+</body>
+</html>

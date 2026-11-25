@@ -1,0 +1,19 @@
+Summary,Description,Precondition,Test Steps,Expected Result,Priority,Labels,Issue Type,Story Link,Epic Link,Issue Link,Status
+Test Scenario01_Postpaid_SIM_Only,Complete Physical SIM Postpaid Onboarding Journey using Deeplink QR for PACI Authentication,,,"Verify if PACI QR works properly 
+Verify if SAF has been successfully created",P2,Magento,,OKQABUG-32384,OKQABUG-28610,,
+Test Scenario02_Prepaid_SIM_Only,Complete Physical SIM Prepaid Onboarding Journey using Deeplink QR for PACI Authentication,,,"Verify if PACI QR works properly 
+Verify if SAF has been successfully created",P2,Magento,,OKQABUG-32384,OKQABUG-28610,,
+Test Scenario03_Prepaid_to_Postpaid,Complete Physical SIM Prepaid to Postapid Migration Journey using Deeplink QR for PACI Authentication,,,"Verify if PACI QR works properly 
+Verify if SAF has been successfully created",P2,Magento,,OKQABUG-32384,OKQABUG-28610,,
+Test Scenario04_Postpaid_to_Postpaid,Complete Physical SIM Postpaid to Postapid Migration Journey using Deeplink QR for PACI Authentication,,,"Verify if PACI QR works properly 
+Verify if SAF has been successfully created",P2,Magento,,OKQABUG-32384,OKQABUG-28610,,
+Test Scenario06_Postpaid_SIM_Only_Port_in,Complete Physical SIM Postpaid Port-in Journey using Deeplink QR for PACI Authentication,,,"Verify if PACI QR works properly 
+Verify if SAF has been successfully created",P2,Magento,,OKQABUG-32384,OKQABUG-28610,,
+Test Scenario07_Prepaid_SIM_Only_Port_in,Complete Physical SIM Prepaid Port-in Journey using Deeplink QR for PACI Authentication,,,"Verify if PACI QR works properly 
+Verify if SAF has been successfully created",P2,Magento,,OKQABUG-32384,OKQABUG-28610,,
+Test Scenario08_Postpaid_SIM_with_Device,Complete Physical SIM Postpaid with Device Onboarding Journey using Deeplink QR for PACI Authentication,,,"Verify if PACI QR works properly 
+Verify if SAF has been successfully created",P2,Magento,,OKQABUG-32384,OKQABUG-28610,,
+Test Scenario09_Prepaid_to_Postpaid_with_Device,Complete Physical SIM Postpaid to Postapid Migration with Device Journey using Deeplink QR for PACI Authentication,,,"Verify if PACI QR works properly 
+Verify if SAF has been successfully created",P2,Magento,,OKQABUG-32384,OKQABUG-28610,,
+Test Scenario10_Postpaid_to_Postpaid_with_Device,Complete Physical SIM Postpaid to Postapid Migration with Device Journey using Deeplink QR for PACI Authentication,,,"Verify if PACI QR works properly 
+Verify if SAF has been successfully created",P2,Magento,,OKQABUG-32384,OKQABUG-28610,,

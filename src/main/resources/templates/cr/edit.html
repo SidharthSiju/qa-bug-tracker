@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Edit Change Request</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="mb-3">
+        <a class="btn btn-sm btn-light" th:href="@{/change-requests/{id}(id=${cr.id})}">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+        <h2 class="mt-2 mb-0">Edit <span th:text="${cr.crNumber}"></span></h2>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form th:action="@{/change-requests/{id}/edit(id=${cr.id})}" th:object="${crForm}" method="post"
+                  data-disable-on-submit>
+                <input type="hidden" th:field="*{version}">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label required" for="crName">CR Name</label>
+                        <input type="text" class="form-control" id="crName" th:field="*{crName}">
+                        <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('crName')}"
+                             th:errors="*{crName}"></div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label required" for="crNumber">Epic Number</label>
+                        <input type="text" class="form-control" id="crNumber" th:field="*{crNumber}"
+                               maxlength="50" required>
+                        <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('crNumber')}"
+                             th:errors="*{crNumber}"></div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="projectId">Project</label>
+                        <select class="form-select" id="projectId" th:field="*{projectId}">
+                            <option value="">Select project</option>
+                            <option th:each="project : ${projects}" th:value="${project.id}"
+                                    th:text="${project.displayLabel()}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="environment">Environment</label>
+                        <select class="form-select" id="environment" th:field="*{environment}">
+                            <option value="">Select environment</option>
+                            <option value="DEV">DEV</option>
+                            <option value="SIT">SIT</option>
+                            <option value="UAT">UAT</option>
+                            <option value="STG">STG</option>
+                            <option value="PROD">PROD</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="sprintName">Sprint Name</label>
+                        <input type="text" class="form-control" id="sprintName" th:field="*{sprintName}"
+                               placeholder="Sprint name or standalone value">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="storyNumber">Story Number</label>
+                        <input type="text" class="form-control" id="storyNumber" th:field="*{storyNumber}"
+                               maxlength="100" placeholder="e.g. STORY-1234">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="priority">Priority</label>
+                        <select class="form-select" id="priority" th:field="*{priority}">
+                            <option th:each="priority : ${T(com.duc.crqa.common.enums.CrPriority).values()}"
+                                    th:value="${priority}" th:text="${priority}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="complexity">Complexity</label>
+                        <select class="form-select" id="complexity" th:field="*{complexity}">
+                            <option th:each="complexity : ${T(com.duc.crqa.common.enums.Complexity).values()}"
+                                    th:value="${complexity}" th:text="${complexity}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="saLeadId">SA Lead</label>
+                        <select class="form-select" id="saLeadId" th:field="*{saLeadId}">
+                            <option value="">Select SA lead</option>
+                            <option th:each="user : ${saLeads}" th:value="${user.id}"
+                                    th:text="${user.displayLabel()}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="developmentOwnerId">Development Owner</label>
+                        <select class="form-select" id="developmentOwnerId" th:field="*{developmentOwnerId}">
+                            <option value="">Select developer</option>
+                            <option th:each="user : ${developers}" th:value="${user.id}"
+                                    th:text="${user.displayLabel()}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="qaLeadId">QA Lead</label>
+                        <select class="form-select" id="qaLeadId" th:field="*{qaLeadId}">
+                            <option value="">Select QA lead</option>
+                            <option th:each="user : ${qaLeads}" th:value="${user.id}"
+                                    th:text="${user.displayLabel()}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="plannedStartDate">Planned Start</label>
+                        <input type="date" class="form-control" id="plannedStartDate" th:field="*{plannedStartDate}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="plannedEndDate">Planned End</label>
+                        <input type="date" class="form-control" id="plannedEndDate" th:field="*{plannedEndDate}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="actualStartDate">Actual Start</label>
+                        <input type="date" class="form-control" id="actualStartDate" th:field="*{actualStartDate}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="actualEndDate">Actual End</label>
+                        <input type="date" class="form-control" id="actualEndDate" th:field="*{actualEndDate}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="dacSubmitDate">DAC Submit Date</label>
+                        <input type="date" class="form-control" id="dacSubmitDate" th:field="*{dacSubmitDate}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="hldSubmitDate">HLD Submit Date</label>
+                        <input type="date" class="form-control" id="hldSubmitDate" th:field="*{hldSubmitDate}">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="description">Description</label>
+                        <textarea class="form-control" id="description" rows="4" th:field="*{description}"></textarea>
+                    </div>
+                </div>
+                <div class="mt-3 d-flex gap-2">
+                    <button class="btn btn-primary" type="submit">Save Changes</button>
+                    <a class="btn btn-light" th:href="@{/change-requests/{id}(id=${cr.id})}">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+</body>
+</html>

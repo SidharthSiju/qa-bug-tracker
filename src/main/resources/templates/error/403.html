@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:attr="data-bs-theme=${appTheme == 'dark' ? 'dark' : 'light'}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Forbidden | CR Issue Tracker</title>
+    <link rel="stylesheet" th:href="@{/vendor/bootstrap/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body class="app-body d-flex align-items-center justify-content-center" style="min-height:100vh;"
+      th:classappend="'theme-' + ${appTheme} + ' font-' + ${appFont} + ' fontsize-' + ${appFontSize}">
+<div class="text-center">
+    <h1 class="display-4" th:text="${status != null ? status : 403}">403</h1>
+    <p class="lead">You do not have permission to access this page.</p>
+    <a class="btn btn-primary" th:href="@{/dashboard}">Back to dashboard</a>
+</div>
+</body>
+</html>

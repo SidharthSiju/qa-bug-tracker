@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Test Cycles</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="mb-0">Test Cycles</h2>
+            <p class="text-muted mb-0" th:if="${cr != null}" th:text="'For ' + ${cr.crNumber}"></p>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <form th:action="@{/test-cycles}" th:object="${criteria}" method="get" class="row g-2">
+                <div class="col-md-5">
+                    <input type="text" class="form-control form-control-sm" th:field="*{search}"
+                           placeholder="Cycle name">
+                </div>
+                <div class="col-md-4">
+                    <select class="form-select form-select-sm" th:field="*{crId}">
+                        <option value="">All CRs</option>
+                        <option th:each="crOption : ${crs}" th:value="${crOption.id}"
+                                th:text="${crOption.crNumber}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select form-select-sm" th:field="*{status}">
+                        <option value="">All statuses</option>
+                        <option th:each="status : ${T(com.duc.crqa.common.enums.TestCycleStatus).values()}"
+                                th:value="${status}" th:text="${status}"></option>
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <button class="btn btn-primary btn-sm w-100" type="submit"><i class="bi bi-search"></i></button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <form th:action="@{/test-cycles/bulk-delete}" method="post"
+              data-confirm="Delete the selected test cycle(s)?">
+            <div class="card-header bg-white d-flex justify-content-end" th:if="${canDeleteTestCycles}">
+                <button class="btn btn-sm btn-outline-danger" type="submit">
+                    <i class="bi bi-trash me-1"></i>Delete selected
+                </button>
+            </div>
+            <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                <tr><th th:if="${canDeleteTestCycles}" style="width:2rem;"><input type="checkbox" data-check-all title="Select all"></th><th data-sort="cr.crNumber">CR</th><th data-sort="cycleNumber">Cycle</th><th data-sort="name">Name</th><th data-sort="status">Status</th><th data-sort="startDate">Start</th><th data-sort="endDate">End</th><th></th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="cycle : ${page.content}">
+                    <td th:if="${canDeleteTestCycles}"><input type="checkbox" name="ids" th:value="${cycle.id}"></td>
+                    <td>
+                        <a th:href="@{/change-requests/{id}(id=${cycle.cr.id})}"
+                           th:text="${cycle.cr.crNumber}"></a>
+                    </td>
+                    <td th:text="${cycle.cycleNumber}"></td>
+                    <td th:text="${cycle.name}"></td>
+                    <td th:text="${cycle.status}"></td>
+                    <td th:text="${cycle.startDate != null ? #temporals.format(cycle.startDate, 'yyyy-MM-dd') : ''}"></td>
+                    <td th:text="${cycle.endDate != null ? #temporals.format(cycle.endDate, 'yyyy-MM-dd') : ''}"></td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-secondary" th:href="@{/test-cycles/{id}(id=${cycle.id})}">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(page.content)}">
+                    <td th:colspan="${canDeleteTestCycles ? 8 : 7}" class="empty-state">No test cycles found</td>
+                </tr>
+                </tbody>
+            </table>
+            </div>
+        </form>
+        <div class="card-footer bg-white d-flex justify-content-end">
+            <nav th:if="${page.totalPages > 1}" aria-label="Pagination">
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+                        <a class="page-link"
+                           th:href="@{/test-cycles(page=${page.number - 1}, size=${page.size}, search=${criteria.search}, crId=${criteria.crId}, status=${criteria.status})}">Previous</a>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link" th:text="'Page ' + ${page.number + 1} + ' of ' + ${page.totalPages}"></span>
+                    </li>
+                    <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+                        <a class="page-link"
+                           th:href="@{/test-cycles(page=${page.number + 1}, size=${page.size}, search=${criteria.search}, crId=${criteria.crId}, status=${criteria.status})}">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</section>
+</body>
+</html>

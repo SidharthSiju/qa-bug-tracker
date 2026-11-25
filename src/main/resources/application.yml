@@ -1,0 +1,127 @@
+spring:
+  application:
+    name: cr-qa-management
+  profiles:
+    active: postgres
+  thymeleaf:
+    cache: false
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 25MB
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: crqa
+        format_sql: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    schemas: crqa
+  jackson:
+    default-property-inclusion: non_null
+
+server:
+  port: 8080
+  error:
+    whitelabel:
+      enabled: false
+  servlet:
+    context-path: /issue-tracker
+    session:
+      timeout: 30m
+      cookie:
+        http-only: true
+        secure: false
+        same-site: lax
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+app:
+  theme: red
+  ui:
+    # Comma-separated values offered by the UI Settings dropdowns.
+    page-sizes: 10,25,50,100
+    font-sizes: 10,12,14,16
+  default-test-case:
+    enabled: true
+  jira:
+    # When false the "Import from JIRA" button is hidden on the Change Requests list.
+    enabled: true
+    # Run the JIRA search in the user's browser instead of on this server. Use this when the server has no network
+    # route to JIRA (no internet access) but the users' browsers do: the browser calls JIRA and posts the result back
+    # for the same mapping, review table and import. JIRA must allow the call from this site (CORS) - see the note on
+    # Administration -> JIRA Configuration.
+    client-side: false
+    # JIRA search endpoint. A base URL (https://jira.example.com) or a full REST endpoint is accepted.
+    base-url: https://okducagile.atlassian.net/rest/api/3/search/jql
+    # Basic-auth credentials for the JIRA API.
+    email: ""
+    api-token: ""
+    # PEM certificate (or chain) of the CA that signs the JIRA server's certificate, used when this JVM does not trust
+    # it - a private/corporate CA, or a reverse proxy (nginx) in front of JIRA. Blank uses the JVM's default truststore.
+    ca-certificate: ""
+    # Maximum number of issues to fetch from JIRA (1-500).
+    max-results: 50
+    # Per-request timeout in seconds (1-300).
+    timeout-seconds: 30
+    # JQL template. {{status}} and {{createdFrom}} are replaced with the values chosen on the import search form.
+    jql: 'project = OKQABUG AND issuetype in (Story,Task,Bug) and status = {{status}} AND created >= "{{createdFrom}}" ORDER BY created ASC'
+    # JIRA fields requested for every issue.
+    fields: 'parent,summary,issuetype,status,priority,assignee,project,created,customfield_10066,customfield_10037,customfield_10038,customfield_10033,customfield_10034,customfield_10159,customfield_10146,customfield_10105,customfield_10150,customfield_10143'
+    # Options offered by the "status" dropdown of the import search form.
+    statuses: 'INITIATION,FEASIBILITY,DAC Build,HLD Build,HLG Approval,DEVELOPMENT,SIT,UAT'
+  storage:
+    type: local
+    location: ./uploads
+    max-file-size: 20971520
+  mail:
+    # When true, notifications are emailed through the transport selected below.
+    enabled: false
+    # smtp = intranet SMTP relay, soap = corporate SOAP email adapter.
+    transport: smtp
+    host: ""
+    port: 25
+    username: ""
+    password: ""
+    from-address: ""
+    start-tls: false
+    timeout-seconds: 20
+    # SOAP transport. {{sit_osb}} and any other {{placeholder}} are resolved from soap-variables.
+    # The shipped request template is built in (see MailProperties) and editable on the Email Settings screen.
+    soap-endpoint: '{{sit_osb}}/EMAILAdapter/ProxyService/EmailWithAttachmentProxy'
+    soap-username: ""
+    soap-password: ""
+    soap-variables: 'sit_osb='
+  sla:
+    blocker-hours: 4
+    critical-hours: 8
+    major-hours: 48
+    minor-hours: 120
+    trivial-hours: 240
+    # Escalation sweep: notifies the owners of bugs that are past their SLA (off until switched on).
+    escalation-enabled: false
+    escalation-cron: 0 0 7 * * *
+    escalate-every-hours: 24
+
+# Where cr-qa-management.log is written (console output always goes to stdout, i.e. the systemd journal).
+# The path is resolved against the working directory, so a service must set LOG_PATH explicitly - for example
+# LOG_PATH=/var/log/cr-qa-management (start.sh passes its own $LOG_PATH here). The application prints the absolute
+# path of the file it is using at start-up, and warns with the same advice when the directory is not writable.
+logging:
+  file:
+    path: ${LOG_PATH:../logs}

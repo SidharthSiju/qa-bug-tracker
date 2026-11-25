@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Bulk Import Change Requests</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="mb-3">
+        <a class="btn btn-sm btn-light" th:href="@{/change-requests}"><i class="bi bi-arrow-left"></i> Back</a>
+        <h2 class="mt-2 mb-0">Bulk Import Change Requests</h2>
+        <p class="text-muted mb-0">Upload a CSV file to create multiple CRs at once.</p>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <form th:action="@{/change-requests/upload}" method="post" enctype="multipart/form-data"
+                  data-disable-on-submit>
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-6">
+                        <label class="form-label required" for="file">CSV file</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".csv,text/csv" required>
+                    </div>
+                    <div class="col-md-6 d-flex gap-2">
+                        <button class="btn btn-primary" type="submit"><i class="bi bi-upload me-1"></i>Upload</button>
+                        <a class="btn btn-outline-secondary" th:href="@{/change-requests/upload/template}">
+                            <i class="bi bi-download me-1"></i>Download template
+                        </a>
+                    </div>
+                </div>
+                <p class="text-muted small mb-0 mt-2">
+                    Columns: epicNumber (or crNumber), crName, projectCode, environment, sprintName, storyNumber,
+                    priority, complexity, saLeadUsername, developmentOwnerUsername, qaLeadUsername, plannedStartDate,
+                    plannedEndDate, actualStartDate, actualEndDate, dacSubmitDate, hldSubmitDate, description. Only
+                    crName is required; leave the epic number blank to auto-generate it. sprintName can be a
+                    standalone value or a sprint name. The owner columns accept a username or a display name (the
+                    value is matched to that user). Dates accept yyyy-MM-dd as well as common formats such as
+                    01/10/2026, 1-Oct-2026 or 2026/10/01, and are saved as yyyy-MM-dd.
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <div class="card mb-3" th:if="${result != null}">
+        <div class="card-body">
+            <h3 class="h6">Upload result</h3>
+            <p class="mb-2">
+                <span th:text="${result.totalRows}">0</span> row(s) processed:
+                <span class="text-success fw-semibold" th:text="${result.successCount}">0</span> created,
+                <span class="text-danger fw-semibold" th:text="${result.errorCount}">0</span> failed
+            </p>
+            <div th:if="${result.errorCount > 0}" class="table-responsive">
+                <table class="table table-sm table-hover align-middle mb-0">
+                    <thead>
+                    <tr><th>Row</th><th>Error</th></tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="rowError : ${result.errors}">
+                        <td th:text="${rowError.rowNumber}"></td>
+                        <td class="text-danger" th:text="${rowError.message}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+</html>

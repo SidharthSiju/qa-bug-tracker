@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>New Test Case</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <!-- Opened without a change request: pick one first. -->
+    <div th:if="${cr == null}">
+        <div class="mb-3">
+            <a class="btn btn-sm btn-light" th:href="@{/test-cases}"><i class="bi bi-arrow-left"></i> Back</a>
+            <h2 class="mt-2 mb-0">New Test Case</h2>
+            <p class="text-muted mb-0">Choose the change request this test case belongs to.</p>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <label class="form-label required" for="crPick">Change Request</label>
+                <select class="form-select" id="crPick">
+                    <option value="">Select CR</option>
+                    <option th:each="c : ${crs}" th:value="${c.id}"
+                            th:text="${c.crNumber + ' - ' + c.crName}"></option>
+                </select>
+                <div class="form-text">The test case form opens once a change request is selected.</div>
+            </div>
+        </div>
+        <script th:inline="javascript">
+            (function () {
+                var picker = document.getElementById('crPick');
+                var url = /*[[@{/test-cases/new}]]*/ '/test-cases/new';
+                picker.addEventListener('change', function () {
+                    if (picker.value) {
+                        window.location = url + '?crId=' + encodeURIComponent(picker.value);
+                    }
+                });
+            })();
+        </script>
+    </div>
+
+    <th:block th:if="${cr != null}">
+    <div class="mb-3">
+        <a class="btn btn-sm btn-light" th:href="@{/change-requests/{id}(id=${cr.id})}">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+        <h2 class="mt-2 mb-0">New Test Case — <span th:text="${cr.crNumber}"></span></h2>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form th:action="@{/test-cases}" th:object="${testCaseForm}" method="post" data-disable-on-submit>
+                <input type="hidden" th:field="*{crId}">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label" for="cycleId">Test Cycle</label>
+                        <select class="form-select" id="cycleId" th:field="*{cycleId}">
+                            <option value="">No cycle</option>
+                            <option th:each="cycle : ${cycles}" th:value="${cycle.id}"
+                                    th:text="${cycle.displayLabel()}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label required" for="title">Summary</label>
+                        <input type="text" class="form-control" id="title" th:field="*{title}">
+                        <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('title')}"
+                             th:errors="*{title}"></div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="priority">Priority</label>
+                        <select class="form-select" id="priority" th:field="*{priority}">
+                            <option value="">No priority</option>
+                            <option th:each="priority : ${T(com.duc.crqa.common.enums.Priority).values()}"
+                                    th:value="${priority}" th:text="${priority}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="labels">Labels</label>
+                        <input type="text" class="form-control" id="labels" th:field="*{labels}"
+                               placeholder="e.g. regression, smokes">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="issueType">Issue Type</label>
+                        <input type="text" class="form-control" id="issueType" th:field="*{issueType}"
+                               placeholder="e.g. Test">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="storyLink">Story Link</label>
+                        <input type="text" class="form-control" id="storyLink" th:value="${cr.storyNumber}" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="epicLink">Epic Link</label>
+                        <input type="text" class="form-control" id="epicLink" th:value="${cr.crNumber}" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="issueLink">Issue Link</label>
+                        <input type="text" class="form-control" id="issueLink" th:field="*{issueLink}"
+                               maxlength="100">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="description">Description</label>
+                        <textarea class="form-control" id="description" rows="3" th:field="*{description}"></textarea>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="precondition">Precondition</label>
+                        <textarea class="form-control" id="precondition" rows="2" th:field="*{precondition}"></textarea>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="testSteps">Test Steps</label>
+                        <textarea class="form-control" id="testSteps" rows="4" th:field="*{testSteps}"></textarea>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="expectedResult">Expected Result</label>
+                        <textarea class="form-control" id="expectedResult" rows="3" th:field="*{expectedResult}"></textarea>
+                    </div>
+                </div>
+                <div class="mt-3 d-flex gap-2">
+                    <button class="btn btn-primary" type="submit">Create Test Case</button>
+                    <a class="btn btn-light" th:href="@{/change-requests/{id}(id=${cr.id})}">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    </th:block>
+</section>
+</body>
+</html>

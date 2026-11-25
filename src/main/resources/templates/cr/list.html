@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Change Requests</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="mb-0">Change Requests</h2>
+            <p class="text-muted mb-0">Track CR delivery through QA</p>
+        </div>
+        <div class="d-flex gap-2" th:if="${canEditChangeRequests}">
+            <a class="btn btn-outline-primary" th:if="${jiraEnabled}" th:href="@{/change-requests/jira-import}"
+               title="Search JIRA and import change requests">
+                <i class="bi bi-cloud-download me-1"></i>Import from JIRA
+            </a>
+            <div class="btn-group">
+                <a class="btn btn-outline-secondary" th:href="@{/change-requests/upload}">
+                    <i class="bi bi-upload me-1"></i>Bulk Import
+                </a>
+                <a class="btn btn-outline-secondary" th:href="@{/change-requests/upload/template}"
+                   title="Download sample CSV">
+                    <i class="bi bi-info-circle"></i>
+                </a>
+            </div>
+            <a class="btn btn-primary" th:href="@{/change-requests/new}">
+                <i class="bi bi-plus-lg me-1"></i>New CR
+            </a>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <form th:action="@{/change-requests}" th:object="${criteria}" method="get" class="row g-2">
+                <div class="col-md-4">
+                    <input type="text" class="form-control form-control-sm" th:field="*{search}"
+                           placeholder="Search number or name">
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select form-select-sm" th:field="*{projectId}">
+                        <option value="">All projects</option>
+                        <option th:each="project : ${projects}" th:value="${project.id}"
+                                th:text="${project.displayLabel()}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select form-select-sm" th:field="*{status}">
+                        <option value="">All statuses</option>
+                        <option th:each="status : ${T(com.duc.crqa.common.enums.CrStatus).values()}"
+                                th:value="${status}" th:text="${status}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select form-select-sm" th:field="*{priority}">
+                        <option value="">All priorities</option>
+                        <option th:each="priority : ${T(com.duc.crqa.common.enums.CrPriority).values()}"
+                                th:value="${priority}" th:text="${priority}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <input type="text" class="form-control form-control-sm" th:field="*{sprintName}"
+                           placeholder="Sprint name">
+                </div>
+                <div class="col-md-1">
+                    <button class="btn btn-primary btn-sm w-100" type="submit"><i class="bi bi-search"></i></button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <form th:action="@{/change-requests/bulk-delete}" method="post"
+              data-confirm="Delete the selected change request(s)? Each one's test cycles, test cases, bugs and activities will be moved to the archive.">
+            <div class="card-header bg-white d-flex justify-content-end" th:if="${canDeleteChangeRequests}">
+                <button class="btn btn-sm btn-outline-danger" type="submit">
+                    <i class="bi bi-trash me-1"></i>Delete selected
+                </button>
+            </div>
+            <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                <tr>
+                    <th th:if="${canDeleteChangeRequests}" style="width:2rem;"><input type="checkbox" data-check-all title="Select all"></th>
+                    <th data-sort="crNumber">Epic Number</th>
+                    <th data-sort="crName">Name</th>
+                    <th data-sort="project.projectCode">Project</th>
+                    <th data-sort="priority">Priority</th>
+                    <th data-sort="complexity">Complexity</th>
+                    <th data-sort="sprintName">Sprint</th>
+                    <th data-sort="storyNumber">Story Number</th>
+                    <th data-sort="saLead.username">SA Lead</th>
+                    <th data-sort="qaLead.username">QA Lead</th>
+                    <th data-sort="developmentOwner.username">Dev Owner</th>
+                    <th data-sort="status">Status</th>
+                    <th data-sort="plannedEndDate">Planned End</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="cr : ${page.content}">
+                    <td th:if="${canDeleteChangeRequests}"><input type="checkbox" name="ids" th:value="${cr.id}"></td>
+                    <td>
+                        <a th:href="@{/change-requests/{id}(id=${cr.id})}" th:text="${cr.crNumber}"></a>
+                    </td>
+                    <td th:text="${cr.crName}"></td>
+                    <td th:text="${cr.project?.projectCode}"></td>
+                    <td th:text="${cr.priority}"></td>
+                    <td th:text="${cr.complexity}"></td>
+                    <td th:text="${cr.sprintName}"></td>
+                    <td th:text="${cr.storyNumber}"></td>
+                    <td th:text="${cr.saLead?.displayLabel()}"></td>
+                    <td th:text="${cr.qaLead?.displayLabel()}"></td>
+                    <td th:text="${cr.developmentOwner?.displayLabel()}"></td>
+                    <td>
+                        <span class="badge badge-soft"
+                              th:classappend="'status-' + ${#strings.toLowerCase(#strings.replace(cr.status.name(),'_','-'))}"
+                              th:text="${cr.status}"></span>
+                    </td>
+                    <td th:text="${cr.plannedEndDate != null ? #temporals.format(cr.plannedEndDate, 'yyyy-MM-dd') : ''}"></td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-secondary" th:href="@{/change-requests/{id}(id=${cr.id})}">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(page.content)}">
+                    <td th:colspan="${canDeleteChangeRequests ? 14 : 13}" class="empty-state">No change requests found</td>
+                </tr>
+                </tbody>
+            </table>
+            </div>
+        </form>
+        <div class="card-footer bg-white d-flex justify-content-end">
+            <nav th:if="${page.totalPages > 1}" aria-label="Pagination">
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+                        <a class="page-link"
+                           th:href="@{/change-requests(page=${page.number - 1}, size=${page.size}, search=${criteria.search}, projectId=${criteria.projectId}, status=${criteria.status}, priority=${criteria.priority}, sprintName=${criteria.sprintName})}">Previous</a>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link" th:text="'Page ' + ${page.number + 1} + ' of ' + ${page.totalPages}"></span>
+                    </li>
+                    <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+                        <a class="page-link"
+                           th:href="@{/change-requests(page=${page.number + 1}, size=${page.size}, search=${criteria.search}, projectId=${criteria.projectId}, status=${criteria.status}, priority=${criteria.priority}, sprintName=${criteria.sprintName})}">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</section>
+</body>
+</html>

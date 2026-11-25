@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>JIRA Configuration</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="mb-3">
+        <h2 class="mb-0">JIRA Configuration</h2>
+        <p class="text-muted mb-0">Connection settings used by Change Requests &rarr; Import from JIRA.</p>
+    </div>
+
+    <div class="alert alert-warning" th:if="${!configured}">
+        <i class="bi bi-exclamation-triangle me-1"></i>
+        JIRA is not configured yet. Set the API URL, email and API token below to enable the import.
+    </div>
+    <div class="alert alert-secondary" th:if="${configured and !config.enabled}">
+        <i class="bi bi-slash-circle me-1"></i>
+        The JIRA integration is switched off, so <strong>Import from JIRA</strong> is hidden for everyone. Tick
+        <em>Enable JIRA</em> below to show it again.
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <form th:action="@{/admin/jira-config}" method="post">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="true" id="enabled" name="enabled"
+                                   th:checked="${config.enabled}">
+                            <label class="form-check-label" for="enabled">Enable JIRA</label>
+                            <div class="form-text">
+                                When ticked, <strong>Import from JIRA</strong> is shown on the Change Requests list.
+                                Untick to hide the button (the saved settings are kept).
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="true" id="clientSide"
+                                   name="clientSide" th:checked="${config.clientSide}">
+                            <label class="form-check-label" for="clientSide">Connect to JIRA from the user's browser</label>
+                            <div class="form-text">
+                                Use this when <strong>this server cannot reach JIRA</strong> (no internet access) while
+                                the users' browsers can: the browser runs the search and posts the issues it received
+                                back here, where they are mapped, reviewed and imported exactly as in the server-side
+                                mode. Nothing else changes; with this unticked the server calls JIRA itself.
+                            </div>
+                        </div>
+                        <div class="alert alert-warning mb-3" th:if="${config.clientSide}">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            <strong>JIRA must allow calls from this page (CORS).</strong> JIRA Cloud does not send the
+                            required headers on <span class="mono">&#42;.atlassian.net</span>, so a browser cannot call a
+                            Cloud URL directly: put the call behind a proxy that adds the header, or use Atlassian's
+                            OAuth gateway (<span class="mono">api.atlassian.com</span>, which does allow it). JIRA
+                            Server/Data Center can be fronted by a reverse proxy that adds
+                            <span class="mono">Access-Control-Allow-Origin</span>. Every user is asked for
+                            <em>their own</em> JIRA email and API token on the import screen; the credentials stored
+                            above are only used in server-side mode. The users can check this with
+                            <strong>Test connection</strong> on the import screen.
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="baseUrl">JIRA API URL</label>
+                        <input type="text" class="form-control" id="baseUrl" name="baseUrl"
+                               th:value="${config.baseUrl}" placeholder="https://okducagile.atlassian.net/rest/api/3/search/jql">
+                        <div class="form-text">
+                            The JIRA search endpoint, for example
+                            <span class="mono">https://okducagile.atlassian.net/rest/api/3/search/jql</span>
+                            (JIRA Cloud) or a base URL such as <span class="mono">https://jira.example.com</span> for
+                            Server/Data Center. Default from <span class="mono">app.jira.base-url</span>.
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="email">Email</label>
+                        <input type="text" class="form-control" id="email" name="email" th:value="${config.email}"
+                               autocomplete="off">
+                        <div class="form-text">Default from <span class="mono">app.jira.email</span>.</div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="apiToken">API token</label>
+                        <input type="password" class="form-control" id="apiToken" name="apiToken"
+                               th:value="${config.apiToken}" autocomplete="new-password">
+                        <div class="form-text">Default from <span class="mono">app.jira.api-token</span>.</div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="caCertificate">CA certificate (optional)</label>
+                        <textarea class="form-control mono" id="caCertificate" name="caCertificate" rows="6"
+                                  th:text="${config.caCertificate}"
+                                  placeholder="-----BEGIN CERTIFICATE----- ... -----END CERTIFICATE-----"></textarea>
+                        <div class="form-text">
+                            Paste the PEM certificate (or chain) of the authority that signs the JIRA server's
+                            certificate when this JVM does not trust it — a private/corporate CA, or a reverse proxy
+                            (nginx) in front of JIRA. This is the in-app fix for the
+                            <span class="mono">PKIX path building failed</span> error and needs no change to the JVM
+                            truststore. Leave blank to use the JVM's default truststore.
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="maxResults">Max results to fetch</label>
+                        <input type="number" class="form-control" id="maxResults" name="maxResults" min="1"
+                               th:max="${maxResultsLimit}" th:value="${config.maxResults}">
+                        <div class="form-text">Default 50, maximum <span th:text="${maxResultsLimit}"></span>.</div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="timeoutSeconds">Request timeout (seconds)</label>
+                        <input type="number" class="form-control" id="timeoutSeconds" name="timeoutSeconds" min="1"
+                               th:max="${timeoutLimit}" th:value="${config.timeoutSeconds}">
+                        <div class="form-text">Maximum <span th:text="${timeoutLimit}"></span>.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="statusList">Status options</label>
+                        <input type="text" class="form-control" id="statusList" name="statusList"
+                               th:value="${config.statusList}">
+                        <div class="form-text">Comma separated; offered by the status dropdown on the import form.</div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="jql">JQL query</label>
+                        <textarea class="form-control" id="jql" name="jql" rows="3" th:text="${config.jql}"></textarea>
+                        <div class="form-text">
+                            <code>{{status}}</code> and <code>{{createdFrom}}</code> are replaced with the values chosen
+                            on the import search form.
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="fieldList">Fields to retrieve</label>
+                        <textarea class="form-control" id="fieldList" name="fieldList" rows="3"
+                                  th:text="${config.fieldList}"></textarea>
+                        <div class="form-text">
+                            Comma separated JIRA field ids. <code>parent</code> carries the epic details. The fields the
+                            import cannot work without (<code>parent</code>, <code>summary</code>, the CM PM/CM SA,
+                            DAC/HLD, RFBT and Developer custom fields) are always requested, even if they are missing
+                            here.
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <button class="btn btn-primary" type="submit">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-white">
+            <h3 class="h6 mb-0">How a JIRA issue becomes a change request</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0">
+                <thead>
+                <tr><th>JIRA field</th><th>Meaning</th><th>Imported as</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="doc : ${fieldDocs}">
+                    <td><code th:text="${doc.jiraField()}"></code></td>
+                    <td th:text="${doc.meaning()}"></td>
+                    <td th:text="${doc.target()}"></td>
+                </tr>
+                <tr>
+                    <td colspan="3" class="text-muted small">
+                        Every other change request field keeps its default value (project: the default project,
+                        environment: SIT, priority/complexity: MEDIUM) and can be completed later.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+</body>
+</html>

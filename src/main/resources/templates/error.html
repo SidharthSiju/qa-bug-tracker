@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:attr="data-bs-theme=${appTheme == 'dark' ? 'dark' : 'light'}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Error | CR Issue Tracker</title>
+    <link rel="stylesheet" th:href="@{/vendor/bootstrap/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<!-- Fallback for any error Spring handles itself (i.e. not one of the mapped 403/404/409/500 cases). Without this
+     template the container cannot render the error view at all, which leaves the browser with a truncated response and
+     fills the log with "Error resolving template [error]". -->
+<body class="app-body d-flex align-items-center justify-content-center" style="min-height:100vh;"
+      th:classappend="'theme-' + ${appTheme} + ' font-' + ${appFont} + ' fontsize-' + ${appFontSize}">
+<div class="text-center">
+    <h1 class="display-4" th:text="${status != null ? status : 500}">500</h1>
+    <p class="lead">
+        <span th:if="${status != null and status == 404}">The page you asked for was not found.</span>
+        <span th:unless="${status != null and status == 404}">Something went wrong. Please try again, or tell your
+            administrator if it keeps happening.</span>
+    </p>
+    <p class="text-muted small" th:if="${path != null}" th:text="'Path: ' + ${path}"></p>
+    <a class="btn btn-primary" th:href="@{/dashboard}">Back to dashboard</a>
+</div>
+</body>
+</html>

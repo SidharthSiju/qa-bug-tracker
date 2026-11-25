@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Audit Log</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <h2 class="mb-3">Audit Log</h2>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <form th:action="@{/admin/audit}" th:object="${criteria}" method="get" class="row g-2">
+                <div class="col-md-3">
+                    <input type="text" class="form-control form-control-sm" th:field="*{search}"
+                           placeholder="User, action or entity">
+                </div>
+                <div class="col-md-2">
+                    <input type="text" class="form-control form-control-sm" th:field="*{action}"
+                           placeholder="Action">
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select form-select-sm" th:field="*{entityType}">
+                        <option value="">All entities</option>
+                        <option value="CHANGE_REQUEST">CHANGE_REQUEST</option>
+                        <option value="BUG">BUG</option>
+                        <option value="TEST_CASE">TEST_CASE</option>
+                        <option value="TEST_CYCLE">TEST_CYCLE</option>
+                        <option value="USER">USER</option>
+                        <option value="PROJECT">PROJECT</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <input type="date" class="form-control form-control-sm" th:field="*{fromDate}" title="From date">
+                </div>
+                <div class="col-md-2">
+                    <input type="date" class="form-control form-control-sm" th:field="*{toDate}" title="To date">
+                </div>
+                <div class="col-md-1">
+                    <button class="btn btn-primary btn-sm w-100" type="submit"><i class="bi bi-search"></i></button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                <tr><th data-sort="createdAt">Time</th><th data-sort="username">User</th><th data-sort="action">Action</th><th data-sort="entityType">Entity</th><th>Old Value</th><th>New Value</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="log : ${page.content}">
+                    <td th:text="${#temporals.format(log.createdAt, 'yyyy-MM-dd HH:mm:ss')}"></td>
+                    <td th:text="${log.username}"></td>
+                    <td th:text="${log.action}"></td>
+                    <td th:text="${log.entityType + (log.entityId != null ? ' #' + log.entityId : '')}"></td>
+                    <td class="small" th:text="${log.oldValue}"></td>
+                    <td class="small" th:text="${log.newValue}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(page.content)}">
+                    <td colspan="6" class="empty-state">No audit records found</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white d-flex justify-content-end">
+            <nav th:if="${page.totalPages > 1}" aria-label="Pagination">
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+                        <a class="page-link"
+                           th:href="@{/admin/audit(page=${page.number - 1}, size=${page.size}, search=${criteria.search}, action=${criteria.action}, entityType=${criteria.entityType}, fromDate=${criteria.fromDate}, toDate=${criteria.toDate})}">Previous</a>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link" th:text="'Page ' + ${page.number + 1} + ' of ' + ${page.totalPages}"></span>
+                    </li>
+                    <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+                        <a class="page-link"
+                           th:href="@{/admin/audit(page=${page.number + 1}, size=${page.size}, search=${criteria.search}, action=${criteria.action}, entityType=${criteria.entityType}, fromDate=${criteria.fromDate}, toDate=${criteria.toDate})}">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</section>
+</body>
+</html>

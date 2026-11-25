@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Bulk Import Bugs</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="mb-3">
+        <a class="btn btn-sm btn-light" th:href="@{/bugs}"><i class="bi bi-arrow-left"></i> Back</a>
+        <h2 class="mt-2 mb-0">Bulk Import Bugs</h2>
+        <p class="text-muted mb-0">
+            Upload a CSV file to create multiple bugs at once. Each row must reference an existing CR by its CR number.
+        </p>
+    </div>
+
+    <div class="alert alert-danger" th:if="${error != null}" th:text="${error}"></div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <form th:action="@{/bugs/upload}" method="post" enctype="multipart/form-data"
+                  data-disable-on-submit>
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-6">
+                        <label class="form-label required" for="file">CSV file</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".csv,text/csv" required>
+                    </div>
+                    <div class="col-md-6 d-flex gap-2">
+                        <button class="btn btn-primary" type="submit"><i class="bi bi-upload me-1"></i>Upload</button>
+                        <a class="btn btn-outline-secondary" th:href="@{/bugs/upload/template}">
+                            <i class="bi bi-download me-1"></i>Download template
+                        </a>
+                    </div>
+                </div>
+                <p class="text-muted small mb-0 mt-2">
+                    Columns: Defect ID, Sprint, CR Number, Summary, Description, Defect Category, Test Phase Found,
+                    Severity, Priority, Status, Environment, Application, Module, Logged By, Assigned To,
+                    Steps to Reproduce, Expected Result, Actual Result. Only CR Number and Summary are required;
+                    the other columns are optional. CR Number must match an existing change request.
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <div class="card mb-3" th:if="${result != null}">
+        <div class="card-body">
+            <h3 class="h6">Upload result</h3>
+            <p class="mb-2">
+                <span th:text="${result.totalRows}">0</span> row(s) processed:
+                <span class="text-success fw-semibold" th:text="${result.successCount}">0</span> created,
+                <span class="text-danger fw-semibold" th:text="${result.errorCount}">0</span> failed
+            </p>
+            <div th:if="${result.errorCount > 0}" class="table-responsive">
+                <table class="table table-sm table-hover align-middle mb-0">
+                    <thead>
+                    <tr><th>Row</th><th>Error</th></tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="rowError : ${result.errors}">
+                        <td th:text="${rowError.rowNumber}"></td>
+                        <td class="text-danger" th:text="${rowError.message}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-white">
+            <h3 class="h6 mb-0">Defect Category reference</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0">
+                <thead>
+                <tr><th>Group / Dimension</th><th>Defect Category Label</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="category : ${T(com.duc.crqa.common.enums.DefectCategory).values()}">
+                    <td th:text="${category.group.label}"></td>
+                    <td th:text="${category.label}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+</body>
+</html>

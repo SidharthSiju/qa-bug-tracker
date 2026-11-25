@@ -1,0 +1,636 @@
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../vendor/fonts/inter-latin-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../vendor/fonts/inter-latin-600.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Roboto";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../vendor/fonts/roboto-latin-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Roboto";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../vendor/fonts/roboto-latin-600.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Open Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../vendor/fonts/open-sans-latin-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Open Sans";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../vendor/fonts/open-sans-latin-600.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Ubuntu";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../vendor/fonts/ubuntu-latin-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Ubuntu";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../vendor/fonts/ubuntu-latin-700.woff2") format("woff2");
+}
+
+:root {
+  --app-sidebar-width: 250px;
+  --app-topbar-height: 58px;
+  --app-bg: #f5f7fb;
+  --app-surface: #ffffff;
+  --app-border: #e5e9f0;
+  --app-primary: #1f3a8a;
+  --app-primary-dark: #16286e;
+  --app-primary-soft: #eef2ff;
+  --app-text: #1f2937;
+  --app-muted: #6b7280;
+  --app-header-bg: #1f3a8a;
+  --app-footer-bg: #1f3a8a;
+  --app-content-bg: #ffffff;
+  --app-table-head-bg: #f9fafb;
+  --app-menu-bg: #ffffff;
+  --app-font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --app-table-font-size: 10px;
+}
+
+.theme-blue {
+  --app-primary: #1f3a8a;
+  --app-primary-dark: #16286e;
+  --app-primary-soft: #eef2ff;
+  --app-header-bg: #1f3a8a;
+  --app-footer-bg: #1f3a8a;
+  --app-content-bg: #ffffff;
+}
+
+.theme-red {
+  --app-primary: #dc2626;
+  --app-primary-dark: #b91c1c;
+  --app-primary-soft: #fee2e2;
+  --app-header-bg: #dc2626;
+  --app-footer-bg: #dc2626;
+  --app-content-bg: #ffffff;
+}
+
+.theme-dark {
+  --app-bg: #0b1220;
+  --app-surface: #111c2e;
+  --app-border: #263449;
+  --app-primary: #3b82f6;
+  --app-primary-dark: #2563eb;
+  --app-primary-soft: #1e3a5f;
+  --app-text: #e2e8f0;
+  --app-muted: #94a3b8;
+  --app-header-bg: #0f172a;
+  --app-footer-bg: #0f172a;
+  --app-content-bg: #0b1220;
+  --app-table-head-bg: #111c2e;
+  --app-menu-bg: #111c2e;
+}
+
+/* Bootstrap's bg-white / bg-light utilities would otherwise stay light in dark mode,
+   making the card header/footer bands (pagination, delete toolbars) unreadable. */
+.theme-dark .bg-white,
+.theme-dark .bg-light {
+  background-color: var(--app-surface) !important;
+}
+
+.theme-dark .card-header,
+.theme-dark .card-footer {
+  color: var(--app-text);
+}
+
+.theme-dark .table {
+  --bs-table-color: var(--app-text);
+  --bs-table-bg: transparent;
+  --bs-table-striped-color: var(--app-text);
+  --bs-table-hover-color: var(--app-text);
+  --bs-table-hover-bg: rgba(148, 163, 184, 0.14);
+}
+
+.font-system {
+  --app-font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.font-verdana {
+  --app-font: Verdana, Geneva, Tahoma, sans-serif;
+}
+
+.font-courier {
+  --app-font: "Courier New", Courier, monospace;
+}
+
+.font-inter {
+  --app-font: "Inter", "Segoe UI", system-ui, sans-serif;
+}
+
+.font-roboto {
+  --app-font: "Roboto", "Helvetica Neue", Arial, sans-serif;
+}
+
+.font-opensans {
+  --app-font: "Open Sans", "Segoe UI", system-ui, sans-serif;
+}
+
+.font-ubuntu {
+  --app-font: "Ubuntu", "Segoe UI", system-ui, sans-serif;
+}
+
+.fontsize-10 {
+  --app-table-font-size: 10px;
+}
+
+.fontsize-11 {
+  --app-table-font-size: 11px;
+}
+
+.fontsize-12 {
+  --app-table-font-size: 12px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body.app-body {
+  margin: 0;
+  background: var(--app-content-bg);
+  color: var(--app-text);
+  font-family: var(--app-font);
+  min-height: 100vh;
+}
+
+a {
+  text-decoration: none;
+}
+
+.app-topbar {
+  height: var(--app-topbar-height);
+  background: var(--app-header-bg);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+}
+
+.app-topbar .btn {
+  color: #fff;
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.65);
+}
+
+.app-topbar .btn:hover,
+.app-topbar .btn:focus {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.18);
+  border-color: #fff;
+}
+
+.app-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.app-brand .brand-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--app-primary);
+  color: #fff;
+}
+
+.app-logo {
+  height: 34px;
+  width: auto;
+  display: block;
+}
+
+.theme-red .app-logo {
+  background: #fff;
+  border-radius: 6px;
+  padding: 3px;
+}
+
+.login-logo {
+  height: 64px;
+  width: auto;
+}
+
+.app-layout {
+  display: flex;
+  min-height: calc(100vh - var(--app-topbar-height));
+}
+
+.app-sidebar {
+  width: var(--app-sidebar-width);
+  background: var(--app-surface);
+  border-right: 1px solid var(--app-border);
+  padding: 0.75rem;
+  flex-shrink: 0;
+}
+
+.app-main {
+  flex: 1;
+  padding: 1.25rem;
+  min-width: 0;
+  background: var(--app-content-bg);
+}
+
+.app-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 0.75rem 1.25rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.85rem;
+  background: var(--app-footer-bg);
+}
+
+.nav-section {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--app-muted);
+  margin: 1rem 0.5rem 0.35rem;
+}
+
+/* A section heading that collapses/expands its group (Administration). */
+.nav-section-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: calc(100% - 1rem);
+  border: 0;
+  background: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.nav-section-toggle:hover {
+  color: var(--app-fg);
+}
+
+.nav-section-chevron {
+  font-size: 0.85rem;
+  transition: transform 0.15s ease-in-out;
+}
+
+.nav-section-toggle[aria-expanded="true"] .nav-section-chevron {
+  transform: rotate(180deg);
+}
+
+/* Inline code hints (application.yml keys, {{placeholders}}, config values). */
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 0.85em;
+}
+
+.app-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 8px;
+  color: var(--app-text);
+  font-weight: 500;
+}
+
+.app-nav-link:hover {
+  background: var(--app-primary-soft);
+  color: var(--app-primary);
+}
+
+.app-nav-link.active {
+  background: var(--app-primary);
+  color: #fff;
+}
+
+.badge-soft {
+  border-radius: 999px;
+  padding: 0.3rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.severity-blocker,
+.severity-critical,
+.status-closed,
+.status-verified,
+.status-rejected,
+.status-completed {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.severity-major,
+.priority-p1,
+.status-fixed,
+.status-blocked,
+.status-qa-blocked,
+.status-in-development {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.severity-minor,
+.severity-trivial,
+.priority-p2,
+.priority-p3,
+.priority-p4,
+.status-assigned,
+.status-in-analysis,
+.status-retesting,
+.status-qa-in-progress,
+.status-development,
+.status-ready-for-retest {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.status-open,
+.status-created,
+.status-ready-for-qa {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.status-reopened,
+.sla-breached {
+  background: #fecaca;
+  color: #dc2626;
+}
+
+.status-cancelled,
+.status-qa-completed,
+.status-uat {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.sla-approaching {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.sla-within {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.card {
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.table thead th {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--app-muted);
+  background: var(--app-table-head-bg);
+}
+
+.table tbody td {
+  font-size: var(--app-table-font-size);
+}
+
+/* Rows that need attention (e.g. an RFBT date that has passed, on the JIRA import review) are shown in red. The colour
+   has to go on the cells: Bootstrap 5.3 styles every td itself, so a class on the tr would never reach the text. */
+.table tbody tr.row-attention > td {
+  color: var(--bs-danger) !important;
+}
+
+.table-responsive {
+  border-radius: 10px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--app-muted);
+}
+
+.empty-state i {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 0.75rem;
+  color: #cbd5e1;
+}
+
+.form-label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--app-primary);
+}
+
+.required::after {
+  content: " *";
+  color: #dc2626;
+}
+
+.detail-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--app-primary);
+}
+
+.detail-value {
+  font-weight: 500;
+}
+
+.table thead th.sortable {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.table thead th.sortable:hover {
+  color: var(--app-primary);
+}
+
+.table thead th .sort-icon {
+  color: #cbd5e1;
+  font-size: 0.8rem;
+}
+
+.table thead th.sortable:hover .sort-icon {
+  color: var(--app-primary);
+}
+
+.table thead th.sort-active {
+  color: var(--app-primary);
+}
+
+.table thead th.sort-active .sort-icon {
+  color: var(--app-primary);
+}
+
+.ss-wrap {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 8rem;
+}
+
+.ss-wrap > .ss-native {
+  display: none !important;
+}
+
+.ss-menu {
+  position: absolute;
+  z-index: 1080;
+  top: calc(100% + 2px);
+  left: 0;
+  right: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  background: var(--app-menu-bg);
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  box-shadow: 0 10px 24px rgba(16, 24, 40, 0.15);
+}
+
+.ss-menu[hidden] {
+  display: none;
+}
+
+.ss-option {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.9rem;
+  color: var(--app-text);
+  cursor: pointer;
+}
+
+.ss-option:hover,
+.ss-option.active {
+  background: var(--app-primary-soft);
+  color: var(--app-primary);
+}
+
+.ss-empty {
+  padding: 0.5rem 0.6rem;
+  font-size: 0.85rem;
+  color: var(--app-muted);
+}
+
+.kpi-card {
+  border-left: 4px solid var(--app-primary);
+}
+
+.timeline-item {
+  border-left: 2px solid var(--app-border);
+  padding-left: 1rem;
+  margin-left: 0.4rem;
+  padding-bottom: 1rem;
+}
+
+.btn-primary {
+  background-color: var(--app-primary);
+  border-color: var(--app-primary);
+  color: #fff;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:focus-visible,
+.btn-primary:active {
+  background-color: var(--app-primary-dark);
+  border-color: var(--app-primary-dark);
+  color: #fff;
+}
+
+.btn-primary:disabled {
+  background-color: var(--app-primary);
+  border-color: var(--app-primary);
+  opacity: 0.65;
+}
+
+.btn-outline-primary {
+  color: var(--app-primary);
+  border-color: var(--app-primary);
+  background-color: transparent;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:focus-visible,
+.btn-outline-primary:active {
+  color: #fff;
+  background-color: var(--app-primary);
+  border-color: var(--app-primary);
+}
+
+.btn-outline-primary:disabled {
+  color: var(--app-primary);
+  border-color: var(--app-primary);
+  opacity: 0.65;
+}
+
+@media (max-width: 991.98px) {
+  .app-sidebar {
+    position: fixed;
+    left: 0;
+    top: var(--app-topbar-height);
+    bottom: 0;
+    z-index: 1040;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+  }
+
+  .app-sidebar.show {
+    transform: translateX(0);
+  }
+}

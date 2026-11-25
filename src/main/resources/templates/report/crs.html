@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Change Request Report</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="mb-0">Change Request Report</h2>
+            <p class="text-muted mb-0">Search change requests by date range and key fields</p>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <form th:action="@{/reports/cr}" th:object="${criteria}" method="get" class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Search</label>
+                    <input type="text" class="form-control form-control-sm" th:field="*{search}"
+                           placeholder="CR number or name">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">From Date</label>
+                    <input type="date" class="form-control form-control-sm" th:field="*{fromDate}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">To Date</label>
+                    <input type="date" class="form-control form-control-sm" th:field="*{toDate}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Project</label>
+                    <select class="form-select form-select-sm" th:field="*{projectId}">
+                        <option value="">All projects</option>
+                        <option th:each="project : ${projects}" th:value="${project.id}"
+                                th:text="${project.displayLabel()}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Status</label>
+                    <select class="form-select form-select-sm" th:field="*{status}">
+                        <option value="">All statuses</option>
+                        <option th:each="status : ${T(com.duc.crqa.common.enums.CrStatus).values()}"
+                                th:value="${status}" th:text="${status}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Priority</label>
+                    <select class="form-select form-select-sm" th:field="*{priority}">
+                        <option value="">All priorities</option>
+                        <option th:each="priority : ${T(com.duc.crqa.common.enums.CrPriority).values()}"
+                                th:value="${priority}" th:text="${priority}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Complexity</label>
+                    <select class="form-select form-select-sm" th:field="*{complexity}">
+                        <option value="">All complexity</option>
+                        <option th:each="complexity : ${T(com.duc.crqa.common.enums.Complexity).values()}"
+                                th:value="${complexity}" th:text="${complexity}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Sprint</label>
+                    <input type="text" class="form-control form-control-sm" th:field="*{sprintName}"
+                           placeholder="Sprint name">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">QA Lead</label>
+                    <select class="form-select form-select-sm" th:field="*{qaLeadId}">
+                        <option value="">All QA leads</option>
+                        <option th:each="user : ${qaLeads}" th:value="${user.id}"
+                                th:text="${user.displayLabel()}"></option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Development Owner</label>
+                    <select class="form-select form-select-sm" th:field="*{developmentOwnerId}">
+                        <option value="">All developers</option>
+                        <option th:each="user : ${developers}" th:value="${user.id}"
+                                th:text="${user.displayLabel()}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-primary btn-sm w-100" type="submit"><i class="bi bi-search"></i></button>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-outline-primary btn-sm w-100" type="submit"
+                            th:formaction="@{/reports/crs.csv}" title="Export CSV">
+                        <i class="bi bi-download me-1"></i>Export
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                <tr>
+                    <th data-sort="crNumber">CR Number</th>
+                    <th data-sort="crName">Name</th>
+                    <th data-sort="project.projectCode">Project</th>
+                    <th data-sort="priority">Priority</th>
+                    <th data-sort="complexity">Complexity</th>
+                    <th data-sort="sprintName">Sprint</th>
+                    <th data-sort="qaLead.username">QA Lead</th>
+                    <th data-sort="developmentOwner.username">Dev Owner</th>
+                    <th data-sort="status">Status</th>
+                    <th data-sort="plannedEndDate">Planned End</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="cr : ${page.content}">
+                    <td>
+                        <a th:href="@{/change-requests/{id}(id=${cr.id})}" th:text="${cr.crNumber}"></a>
+                    </td>
+                    <td th:text="${cr.crName}"></td>
+                    <td th:text="${cr.project?.projectCode}"></td>
+                    <td th:text="${cr.priority}"></td>
+                    <td th:text="${cr.complexity}"></td>
+                    <td th:text="${cr.sprintName}"></td>
+                    <td th:text="${cr.qaLead?.displayLabel()}"></td>
+                    <td th:text="${cr.developmentOwner?.displayLabel()}"></td>
+                    <td>
+                        <span class="badge badge-soft"
+                              th:classappend="'status-' + ${#strings.toLowerCase(#strings.replace(cr.status.name(),'_','-'))}"
+                              th:text="${cr.status}"></span>
+                    </td>
+                    <td th:text="${cr.plannedEndDate != null ? #temporals.format(cr.plannedEndDate, 'yyyy-MM-dd') : ''}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(page.content)}">
+                    <td colspan="10" class="empty-state">No change requests found</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white d-flex justify-content-end">
+            <nav th:if="${page.totalPages > 1}" aria-label="Pagination">
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+                        <a class="page-link"
+                           th:href="@{/reports/cr(page=${page.number - 1}, size=${page.size}, search=${criteria.search}, projectId=${criteria.projectId}, status=${criteria.status}, priority=${criteria.priority}, complexity=${criteria.complexity}, sprintName=${criteria.sprintName}, qaLeadId=${criteria.qaLeadId}, developmentOwnerId=${criteria.developmentOwnerId}, fromDate=${criteria.fromDate}, toDate=${criteria.toDate})}">Previous</a>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link" th:text="'Page ' + ${page.number + 1} + ' of ' + ${page.totalPages}"></span>
+                    </li>
+                    <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+                        <a class="page-link"
+                           th:href="@{/reports/cr(page=${page.number + 1}, size=${page.size}, search=${criteria.search}, projectId=${criteria.projectId}, status=${criteria.status}, priority=${criteria.priority}, complexity=${criteria.complexity}, sprintName=${criteria.sprintName}, qaLeadId=${criteria.qaLeadId}, developmentOwnerId=${criteria.developmentOwnerId}, fromDate=${criteria.fromDate}, toDate=${criteria.toDate})}">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</section>
+</body>
+</html>

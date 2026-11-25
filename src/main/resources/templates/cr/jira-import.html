@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Import from JIRA</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="mb-3">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+            <div>
+                <h2 class="mb-0">Import from JIRA</h2>
+                <p class="text-muted mb-0">Fetch change requests from JIRA, review them, then import the ones you need.</p>
+            </div>
+            <a class="btn btn-light" th:href="@{/change-requests}">
+                <i class="bi bi-arrow-left me-1"></i>Back to change requests
+            </a>
+        </div>
+    </div>
+
+    <div class="alert alert-secondary" th:if="${!jiraEnabled}">
+        <i class="bi bi-slash-circle me-1"></i>
+        The JIRA integration is switched off. An administrator can enable it under
+        Administration &rarr; JIRA Configuration.
+    </div>
+
+    <div class="alert alert-warning" th:if="${jiraEnabled and !jiraConfigured}">
+        <i class="bi bi-exclamation-triangle me-1"></i>
+        JIRA is not configured yet. An administrator must set the API URL, email and API token under
+        Administration &rarr; JIRA Configuration.
+    </div>
+
+    <div class="alert alert-info" th:if="${clientSide}">
+        <i class="bi bi-info-circle me-1"></i>
+        This installation runs the JIRA search in <strong>your browser</strong>, because the application server cannot
+        reach JIRA. The search itself, and the credentials it uses, stay between your browser and JIRA; only the issues
+        you fetched are posted back here for review and import. JIRA has to allow calls from this page
+        (<abbr title="Cross-Origin Resource Sharing">CORS</abbr>) &mdash; use <strong>Test connection</strong> below.
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <form th:action="@{/change-requests/jira-import/search}" th:object="${searchForm}" method="post"
+                  data-disable-on-submit>
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-2">
+                        <label class="form-label required" for="fromDate">Created from</label>
+                        <input type="date" class="form-control" id="fromDate" th:field="*{fromDate}">
+                        <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('fromDate')}"
+                             th:errors="*{fromDate}"></div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label required" for="status">Status</label>
+                        <select class="form-select" id="status" th:field="*{status}">
+                            <option value="">Select status</option>
+                            <option th:each="option : ${statuses}" th:value="${option}" th:text="${option}"></option>
+                        </select>
+                        <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('status')}"
+                             th:errors="*{status}"></div>
+                    </div>
+					<div class="col-md-2">
+					    <label class="form-label" for="storyNumber">Story number</label>
+					    <input type="text" class="form-control" id="storyNumber" th:field="*{storyNumber}"
+					           placeholder="OKQABUG-33153">
+					    <div class="form-text">Leave Date/Status empty when searching by story.</div>
+					</div>
+                    <div class="col-md-5 d-flex gap-2">
+                        <button class="btn btn-primary" type="submit" th:unless="${clientSide}"
+                                th:disabled="${!jiraReady}">
+                            <i class="bi bi-cloud-download me-1"></i>Fetch from JIRA
+                        </button>
+                        <a class="btn btn-light" th:href="@{/change-requests}">Cancel</a>
+                    </div>
+                </div>
+                <p class="text-muted small mb-0 mt-2">
+                    Up to <span th:text="${maxResults}"></span> issue(s) are fetched. JQL:
+                    <code th:text="${jqlTemplate}"></code>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- JIRA searched from the browser: for servers without a network route to JIRA. The credentials entered here are
+         used by the browser only and are never posted to this application. -->
+    <div class="card mb-3" th:if="${clientSide}" id="jiraClient"
+         th:attr="data-jira-endpoint=${jiraEndpoint},data-jira-jql=${jqlTemplate},data-jira-fields=${jiraFields},
+                  data-jira-max=${maxResults},data-jira-post=@{/change-requests/jira-import/client-search}">
+        <div class="card-header bg-white"><h3 class="h6 mb-0">Search in JIRA from this browser</h3></div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label" for="jiraEmailInput">Your JIRA email</label>
+                    <input type="text" class="form-control" id="jiraEmailInput" th:value="${jiraEmail}"
+                           autocomplete="off" placeholder="you@example.com">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="jiraTokenInput">Your JIRA API token</label>
+                    <input type="password" class="form-control" id="jiraTokenInput" autocomplete="new-password">
+                    <div class="form-text">
+                        Both are kept in this browser tab and sent to JIRA only &mdash; this application never receives
+                        them. A token can be created in your Atlassian account settings.
+                    </div>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="button" class="btn btn-outline-secondary" id="jiraTestButton">
+                        <i class="bi bi-plug me-1"></i>Test connection
+                    </button>
+                </div>
+                <div class="col-12">
+                    <button type="button" class="btn btn-primary" id="jiraBrowserSearchButton"
+                            th:disabled="${!jiraEnabled}">
+                        <i class="bi bi-cloud-download me-1"></i>Search in JIRA from this browser
+                    </button>
+                    <span class="text-muted small ms-2">
+                        Uses the status and "created from" date chosen above; up to
+                        <span th:text="${maxResults}"></span> issue(s).
+                    </span>
+                </div>
+                <div class="col-12">
+                    <div class="alert d-none mb-0" id="jiraClientStatus" role="status"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carries the response the browser fetched back to the server for the normal mapping, review and import. -->
+    <form id="jiraClientForm" class="d-none" method="post"
+          th:action="@{/change-requests/jira-import/client-search}">
+        <input type="hidden" name="payload" id="jiraClientPayload">
+        <input type="hidden" name="status" id="jiraClientStatusField">
+        <input type="hidden" name="fromDate" id="jiraClientFromField">
+    </form>
+
+    <div class="card">
+        <div class="card-header bg-white">
+            <h3 class="h6 mb-0">How JIRA issues map to change requests</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0">
+                <thead>
+                <tr><th>JIRA field</th><th>Meaning</th><th>Imported as</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="doc : ${fieldDocs}">
+                    <td><code th:text="${doc.jiraField()}"></code></td>
+                    <td th:text="${doc.meaning()}"></td>
+                    <td th:text="${doc.target()}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+</body>
+</html>

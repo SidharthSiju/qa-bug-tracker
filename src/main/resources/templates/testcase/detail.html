@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="${testCase.testCaseNumber}">Test Case</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-start mb-3">
+        <div>
+            <a class="btn btn-sm btn-light" th:href="@{/test-cases}"><i class="bi bi-arrow-left"></i> Back</a>
+            <h2 class="mt-2 mb-0"><span th:text="${testCase.testCaseNumber}"></span> — <span th:text="${testCase.title}"></span></h2>
+            <div class="text-muted">
+                <a th:href="@{/change-requests/{id}(id=${testCase.cr.id})}" th:text="${testCase.cr.crNumber}"></a>
+                <span th:if="${testCase.cycle != null}" th:text="' / ' + ${testCase.cycle.displayLabel()}"></span>
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-danger" th:if="${canEditBugs and testCase.status.name() == 'FAIL'}"
+               th:href="@{/bugs/new(crId=${testCase.cr.id}, testCaseId=${testCase.id})}">
+                <i class="bi bi-bug me-1"></i>Raise Bug
+            </a>
+            <a class="btn btn-primary" th:if="${canEditTestCases}" th:href="@{/test-cases/{id}/edit(id=${testCase.id})}">
+                <i class="bi bi-pencil me-1"></i>Edit
+            </a>
+        </div>
+    </div>
+
+    <div class="card p-3 mb-3">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="detail-label">Status</div>
+                <div class="detail-value" th:text="${testCase.status}"></div>
+            </div>
+            <div class="col-md-6">
+                <div class="detail-label">Executed By</div>
+                <div class="detail-value"
+                     th:text="${testCase.executedBy != null ? userMap[testCase.executedBy]?.displayLabel() : ''}"></div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="detail-label">Priority</div>
+                <div class="detail-value" th:text="${testCase.priority}"></div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="detail-label">Issue Type</div>
+                <div class="detail-value" th:text="${testCase.issueType}"></div>
+            </div>
+            <div class="col-12">
+                <div class="detail-label">Labels</div>
+                <div class="detail-value" th:text="${testCase.labels}"></div>
+            </div>
+            <div class="col-12">
+                <div class="detail-label">Description</div>
+                <p th:text="${testCase.description}"></p>
+            </div>
+            <div class="col-12">
+                <div class="detail-label">Precondition</div>
+                <p style="white-space: pre-wrap;" th:text="${testCase.precondition}"></p>
+            </div>
+            <div class="col-12">
+                <div class="detail-label">Test Steps</div>
+                <p style="white-space: pre-wrap;" th:text="${testCase.testSteps}"></p>
+            </div>
+            <div class="col-12">
+                <div class="detail-label">Expected Result</div>
+                <p th:text="${testCase.expectedResult}"></p>
+            </div>
+            <div class="col-12">
+                <div class="detail-label">Actual Result</div>
+                <p th:text="${testCase.actualResult}"></p>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="detail-label">Story Link</div>
+                <div class="detail-value" th:text="${testCase.storyLink}"></div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="detail-label">Epic Link</div>
+                <div class="detail-value" th:text="${testCase.epicLink}"></div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="detail-label">Issue Link</div>
+                <div class="detail-value" th:text="${testCase.issueLink}"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card p-3" th:if="${canEditTestCases}">
+        <h3 class="h6">Record Execution</h3>
+        <form th:action="@{/test-cases/{id}/execute(id=${testCase.id})}" method="post" class="row g-2"
+              data-disable-on-submit>
+            <div class="col-md-3">
+                <select class="form-select" name="status">
+                    <option th:each="status : ${statuses}" th:value="${status}" th:text="${status}"></option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <input type="text" class="form-control" name="actualResult" placeholder="Actual result">
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-primary w-100" type="submit">Save Execution</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card p-3 mt-3">
+        <h3 class="h6">History</h3>
+        <form th:action="@{/test-cases/{id}(id=${testCase.id})}" method="get" class="row g-2 mb-2">
+            <input type="hidden" name="historySort" th:value="${historySort}">
+            <input type="hidden" name="historyDir" th:value="${historyDir}">
+            <div class="col-md-4">
+                <input type="text" class="form-control form-control-sm" name="historySearch"
+                       th:value="${historySearch}" placeholder="Action or comment">
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-primary btn-sm w-100" type="submit"><i class="bi bi-search"></i></button>
+            </div>
+        </form>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                <tr>
+                    <th data-sort="performedAt" data-sort-param="historySort" data-dir-param="historyDir"
+                        data-page-param="historyPage">Time</th>
+                    <th data-sort="action" data-sort-param="historySort" data-dir-param="historyDir"
+                        data-page-param="historyPage">Action</th>
+                    <th data-sort="oldStatus" data-sort-param="historySort" data-dir-param="historyDir"
+                        data-page-param="historyPage">From</th>
+                    <th data-sort="newStatus" data-sort-param="historySort" data-dir-param="historyDir"
+                        data-page-param="historyPage">To</th>
+                    <th>Comment</th>
+                    <th>By</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="entry : ${historyPage.content}">
+                    <td th:text="${entry.performedAt != null ? #temporals.format(entry.performedAt, 'yyyy-MM-dd HH:mm') : ''}"></td>
+                    <td th:text="${entry.action}"></td>
+                    <td th:text="${entry.oldStatus}"></td>
+                    <td th:text="${entry.newStatus}"></td>
+                    <td th:text="${entry.comment}"></td>
+                    <td th:text="${entry.performedBy != null ? userMap[entry.performedBy]?.displayLabel() : ''}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(historyPage.content)}">
+                    <td colspan="6" class="empty-state">No history</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="d-flex justify-content-end mt-2">
+            <nav th:if="${historyPage.totalPages > 1}" aria-label="Pagination">
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item" th:classappend="${historyPage.first} ? 'disabled'">
+                        <a class="page-link"
+                           th:href="@{/test-cases/{id}(id=${testCase.id}, historySearch=${historySearch}, historySort=${historySort}, historyDir=${historyDir}, historyPage=${historyPage.number - 1})}">Previous</a>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link" th:text="'Page ' + ${historyPage.number + 1} + ' of ' + ${historyPage.totalPages}"></span>
+                    </li>
+                    <li class="page-item" th:classappend="${historyPage.last} ? 'disabled'">
+                        <a class="page-link"
+                           th:href="@{/test-cases/{id}(id=${testCase.id}, historySearch=${historySearch}, historySort=${historySort}, historyDir=${historyDir}, historyPage=${historyPage.number + 1})}">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</section>
+</body>
+</html>
